@@ -1,5 +1,5 @@
 {
-  "name": "sqlite-bridge",
+  "name": "indexql",
   "version": "1.0.0",
   "description": "SQL Bridge to Indexdb",
   "main": "index.js",
@@ -19,9 +19,9 @@
   "author": "Julian Klämke",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/juliankl96/sql-bridge/issues"
+    "url": "https://github.com/juliankl96/indexql/issues"
   },
-  "homepage": "https://github.com/juliankl96/sql-bridge#readme",
+  "homepage": "https://github.com/juliankl96/indexql#readme",
   "dependencies": {
     "sql.js": "^1.10.3"
   },
