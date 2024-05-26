@@ -3,6 +3,8 @@ export interface FromAlias {
     table: string;
 }
 
+export const NO_TABLE_DEFINED_EXCEPTION = "No table is defined after \"from\"";
+
 export class FromClause {
 
 
@@ -10,8 +12,15 @@ export class FromClause {
 
     constructor(...from: string[]) {
         for (const query of from) {
-            let clause = this.handleFrom(query);
+            if (query.trim().length === 0) {
+                throw new Error(NO_TABLE_DEFINED_EXCEPTION)
+            }
+            const clause = this.handleFrom(query);
             this._aliases.push(clause);
+        }
+
+        if (this._aliases.length == 0) {
+            throw new Error(NO_TABLE_DEFINED_EXCEPTION)
         }
     }
 
@@ -25,12 +34,12 @@ export class FromClause {
         if (regExpExecArray === null) {
             throw new Error(`Invalid from clause: ${fromQuery}`);
         }
-        if (regExpExecArray[1] && regExpExecArray[2]){
+        if (regExpExecArray[1] && regExpExecArray[2]) {
             return {
                 alias: regExpExecArray[2],
                 table: regExpExecArray[1]
             }
-        }else{
+        } else {
             return {
                 table: regExpExecArray[1]
             }
