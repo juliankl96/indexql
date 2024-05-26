@@ -10,7 +10,7 @@ describe('SelectClause', () => {
     it('should handle raw imports', () => {
         const selectClause = new SelectClause('name', 'age');
         expect(selectClause.starImport).toBe(false);
-        const selections = selectClause.selections;
+        const selections = selectClause.resultColumn;
         expect(selections.length).toBe(2);
 
         expect(selections[0].key).toBe('name');
@@ -23,7 +23,7 @@ describe('SelectClause', () => {
     it('should handle table imports', () => {
         const selectClause = new SelectClause('person.name', 'person.age');
         expect(selectClause.starImport).toBe(false);
-        const selections = selectClause.selections;
+        const selections = selectClause.resultColumn;
         expect(selections.length).toBe(2);
 
         expect(selections[0].key).toBe('name');

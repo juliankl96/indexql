@@ -1,26 +1,33 @@
-export interface Selection {
+export interface ResultColumn {
     key: string;
     table?: string;
 }
+
 export const EMPTY_SELECTION_ERROR = 'Empty selection';
 export const MIXED_SELECTION_ERROR = 'Mixed selection is not allowed';
 
+/**
+ * https://www.sqlite.org/lang_select.html
+ */
 export class SelectClause {
 
     private _starImport: boolean = false;
-    private _selections: Selection[] = [];
+
+    private _resultColumn: ResultColumn[] = [];
+    private _distinct: boolean = false;
+    private _all: boolean = false;
 
     constructor(...selections: string[]) {
         this._starImport = selections.includes('*')
-        this._selections = selections
+        this._resultColumn = selections
             .filter(value => value != '*')
             .map(this.handleSelection);
 
-        if (this._selections.length === 0 && !this._starImport) {
+        if (this._resultColumn.length === 0 && !this._starImport) {
             throw new Error(EMPTY_SELECTION_ERROR);
         }
 
-        if (this._starImport && this._selections.length > 0) {
+        if (this._starImport && this._resultColumn.length > 0) {
             throw new Error(MIXED_SELECTION_ERROR);
         }
     }
@@ -30,7 +37,23 @@ export class SelectClause {
     }
 
 
-    handleSelection(selection: string): Selection {
+    get distinct(): boolean {
+        return this._distinct;
+    }
+
+    set distinct(value: boolean) {
+        this._distinct = value;
+    }
+
+    get all(): boolean {
+        return this._all;
+    }
+
+    set all(value: boolean) {
+        this._all = value;
+    }
+
+    handleSelection(selection: string): ResultColumn {
         let dotSplit = selection.split('.');
         if (dotSplit.length === 1) {
             return {
@@ -45,13 +68,8 @@ export class SelectClause {
         throw new Error('Invalid selection');
     }
 
-    public findKeys(table: string): string[] {
-        return this._selections
-            .filter(selection => selection.table === table)
-            .map(selection => selection.key);
-    }
 
-    public get selections(): Selection[] {
-        return this._selections;
+    public get resultColumn(): ResultColumn[] {
+        return this._resultColumn;
     }
 }
