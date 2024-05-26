@@ -2,6 +2,8 @@ export interface Selection {
     key: string;
     table?: string;
 }
+export const EMPTY_SELECTION_ERROR = 'Empty selection';
+export const MIXED_SELECTION_ERROR = 'Mixed selection is not allowed';
 
 export class SelectClause {
 
@@ -11,11 +13,15 @@ export class SelectClause {
     constructor(...selections: string[]) {
         this._starImport = selections.includes('*')
         this._selections = selections
-            .filter(value => value!= '*')
+            .filter(value => value != '*')
             .map(this.handleSelection);
 
+        if (this._selections.length === 0 && !this._starImport) {
+            throw new Error(EMPTY_SELECTION_ERROR);
+        }
+
         if (this._starImport && this._selections.length > 0) {
-            throw new Error('Invalid selection');
+            throw new Error(MIXED_SELECTION_ERROR);
         }
     }
 

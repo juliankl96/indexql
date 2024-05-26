@@ -1,4 +1,4 @@
-import {SelectClause} from "./select-clause";
+import {EMPTY_SELECTION_ERROR, MIXED_SELECTION_ERROR, SelectClause} from "./select-clause";
 
 describe('SelectClause', () => {
 
@@ -34,7 +34,11 @@ describe('SelectClause', () => {
     });
 
     it('should throw an error when star import is mixed with other imports', () => {
-        expect(() => new SelectClause('*', 'name')).toThrowError('Invalid selection');
+        expect(() => new SelectClause('*', 'name')).toThrowError(MIXED_SELECTION_ERROR);
+    });
+
+    it('should throw an error when input is empty', () => {
+        expect(() => new SelectClause()).toThrowError(EMPTY_SELECTION_ERROR);
     });
 
 });
