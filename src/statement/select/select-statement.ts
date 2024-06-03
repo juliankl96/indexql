@@ -7,7 +7,7 @@ import {OrderByClause} from "./order-by-clause";
 import {LimitClause} from "./limit-clause";
 import {Statement} from "../statement";
 
-class SelectStatement implements Statement {
+export class SelectStatement implements Statement {
     private select: SelectClause;
     private from: FromClause;
     private where?: WhereClause;
@@ -15,4 +15,8 @@ class SelectStatement implements Statement {
     private having?: HavingClause;
     private orderBy?: OrderByClause;
     private limit?: LimitClause;
+
+    toSql(): string {
+        return "UNIMPLEMENTED";
+    }
 }
