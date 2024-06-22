@@ -6,8 +6,6 @@ export class SelectStatement implements Statement {
         return statement.trim().substring(0, 6).toUpperCase() === "SELECT".toUpperCase();
     }
 
-    private resultColumns: ResultColumn[];
-    private tableOrSubquery: string;
 
     toSql(): string {
         return "UNIMPLEMENTED";

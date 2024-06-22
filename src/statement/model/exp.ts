@@ -14,6 +14,8 @@ https://www.sqlite.org/syntax/expr.html
 export interface Exp {
 
     toSql(): string;
+
+    get regex(): RegExp;
 }
 
 export class LiteralValue implements Exp {
@@ -31,6 +33,10 @@ export class LiteralValue implements Exp {
     toSql(): string {
         return this._value.toString();
     }
+
+    get regex(): RegExp {
+        return /((\d+)|('.*')|NULL|FALSE|TRUE|CURRENT_TIME|CURRENT_DATE|CURRENT_TIMESTAMP)/gmi
+    }
 }
 
 export class BindParameter implements Exp {
@@ -47,6 +53,10 @@ export class BindParameter implements Exp {
 
     toSql(): string {
         return this._parameter;
+    }
+
+    get regex(): RegExp {
+        return /(((\?|:|@|\$)\<\w+\>)|(\?))/gmi
     }
 }
 
@@ -85,6 +95,10 @@ export class Column implements Exp {
         }
         return this._column;
     }
+
+    get regex(): RegExp {
+        return /((\w+)\.)?((\w+)\.)?(\w+)/gmi
+    }
 }
 
 export class UnaryOperation implements Exp {
@@ -107,6 +121,10 @@ export class UnaryOperation implements Exp {
 
     toSql(): string {
         return `${this._operator} ${this._exp.toSql()}`;
+    }
+
+    get regex(): RegExp {
+        return /((NOT\s)|[+-~]).+/gmi
     }
 }
 
@@ -137,6 +155,11 @@ export class BinaryOperation implements Exp {
     toSql(): string {
         return `${this._left.toSql()} ${this._operator.operator} ${this._right.toSql()}`;
     }
+
+    get regex(): RegExp {
+        return /(.+) (&|>>|<<|XOR|BIT_COUNT\(\)|\||~) (.+)/gmi
+    }
+
 }
 
 
@@ -171,6 +194,10 @@ export class FunctionCall implements Exp {
         }
         return result;
     }
+
+    get regex(): RegExp {
+        return undefined;
+    }
 }
 
 export class ExpressionList implements Exp {
@@ -187,6 +214,10 @@ export class ExpressionList implements Exp {
 
     toSql(): string {
         return `(${this._expressions.map(exp => exp.toSql()).join(', ')})`;
+    }
+
+    get regex(): RegExp {
+        return undefined;
     }
 }
 
@@ -213,6 +244,10 @@ export class Cast implements Exp {
     toSql(): string {
         return `CAST(${this._exp.toSql()} AS ${this._type})`;
     }
+
+    get regex(): RegExp {
+        return undefined;
+    }
 }
 
 export class Collate implements Exp {
@@ -235,6 +270,10 @@ export class Collate implements Exp {
 
     toSql(): string {
         return `${this._exp.toSql()} COLLATE ${this._collation}`;
+    }
+
+    get regex(): RegExp {
+        return undefined;
     }
 }
 
@@ -265,6 +304,10 @@ export class PatternMatching implements Exp {
         }
         return result;
     }
+
+    get regex(): RegExp {
+        return undefined;
+    }
 }
 
 export class NullExp implements Exp {
@@ -279,6 +322,10 @@ export class NullExp implements Exp {
 
     toSql(): string {
         return `${this._exp.toSql()} ${this._state}`;
+    }
+
+    get regex(): RegExp {
+        return undefined;
     }
 }
 
@@ -299,6 +346,10 @@ export class Distinct implements Exp {
     toSql(): string {
         return `${this._exp.toSql()} IS ${this._not ? 'NOT ' : ''}${this._distinctFrom ? 'DISTINCT FROM' : ''}${this._from.toSql()}`;
     }
+
+    get regex(): RegExp {
+        return undefined;
+    }
 }
 
 export class Between implements Exp {
@@ -317,6 +368,10 @@ export class Between implements Exp {
 
     toSql(): string {
         return `${this._exp.toSql()} ${this._not ? 'NOT ' : ''}BETWEEN ${this._start.toSql()} AND ${this._end.toSql()}`;
+    }
+
+    get regex(): RegExp {
+        return undefined;
     }
 }
 
@@ -364,6 +419,10 @@ export class In implements Exp {
             return result;
         }
     }
+
+    get regex(): RegExp {
+        return undefined;
+    }
 }
 
 export class Exists implements Exp {
@@ -382,6 +441,10 @@ export class Exists implements Exp {
 
     toSql(): string {
         return `${this._not ? 'NOT ' : ''}EXISTS (${this._select.toSql()})`;
+    }
+
+    get regex(): RegExp {
+        return undefined;
     }
 }
 
@@ -405,6 +468,10 @@ export class Case implements Exp {
         }
         return result;
     }
+
+    get regex(): RegExp {
+        return undefined;
+    }
 }
 
 export class RaiseFunction implements Exp {
@@ -422,5 +489,9 @@ export class RaiseFunction implements Exp {
             return `RAISE(${this._raiseFn})`;
         }
         return `RAISE(${this._raiseFn}, ${this._error})`;
+    }
+
+    get regex(): RegExp {
+        return undefined;
     }
 }
