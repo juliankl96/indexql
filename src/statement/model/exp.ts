@@ -16,6 +16,7 @@ export interface Exp {
     toSql(): string;
 
     get regex(): RegExp;
+
 }
 
 export class LiteralValue implements Exp {
@@ -56,7 +57,7 @@ export class BindParameter implements Exp {
     }
 
     get regex(): RegExp {
-        return /(((\?|:|@|\$)\<\w+\>)|(\?))/gmi
+        return /((([?:@$])<\w+>)|(\?))/gmi
     }
 }
 

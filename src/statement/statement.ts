@@ -1,5 +1,6 @@
 import {SelectStatement} from "./select/select-statement";
 
+
 export interface Statement {
 
     toSql(): string;
