@@ -6,19 +6,7 @@ import {Like, SubExp} from "./sub-exp";
 import {TableFunction} from "./table-function";
 import {SelectStatement} from "../select/select-statement";
 import {RaiseFunctionType} from "./raise-function";
-import {StatementModule, WordModule} from "../../statement-module-parser";
-import {
-    BlobType,
-    CurrentDateType,
-    CurrentTimestampType,
-    CurrentTimeType,
-    FalseType,
-    IntegerType,
-    NullType,
-    StringType,
-    TrueType,
-    Type
-} from "./data-types";
+import {Type} from "./data-types";
 
 /*
 https://www.sqlite.org/syntax/expr.html
@@ -81,15 +69,10 @@ export class Column implements Exp {
     private _column: string;
 
 
-    constructor(param: string) {
-        const regex = /((\w+)\.)?((\w+)\.)?(\w+)/gmi;
-        const matches = regex.exec(param);
-        if (matches === null) {
-            throw new Error('Invalid column');
-        }
-        this._schema = matches[2];
-        this._table = matches[4];
-        this._column = matches[5];
+    constructor(column: string, table?: string, schema?: string) {
+        this._column = column;
+        this._table = table;
+        this._schema = schema;
     }
 
     get table(): string {
@@ -98,6 +81,10 @@ export class Column implements Exp {
 
     get column(): string {
         return this._column;
+    }
+
+    get schema(): string {
+        return this._schema;
     }
 
     toSql(): string {
@@ -510,51 +497,4 @@ export class RaiseFunction implements Exp {
     }
 }
 
-export class ExpFactory {
 
-    public static createExp(selectModules: StatementModule[], rawStatement: string = selectModules.join(" ")): Exp {
-        if (selectModules.length === 1 && selectModules[0] instanceof WordModule) {
-            return ExpFactory.handleOneWordModule(selectModules[0] as WordModule);
-        }
-        throw new Error("Not implemented");
-    }
-
-    private static handleOneWordModule(statementModule: WordModule): Exp {
-        switch (statementModule.value.toUpperCase()) {
-            case 'NULL':
-                return new LiteralValue(new NullType());
-            case 'FALSE':
-                return new LiteralValue(new FalseType());
-            case 'TRUE':
-                return new LiteralValue(new TrueType());
-            case 'CURRENT_TIME':
-                return new LiteralValue(new CurrentTimeType());
-            case 'CURRENT_DATE':
-                return new LiteralValue(new CurrentDateType());
-            case 'CURRENT_TIMESTAMP':
-                return new LiteralValue(new CurrentTimestampType());
-        }
-        // handle bind-parameter
-        if (statementModule.value.startsWith(":") || statementModule.value.startsWith("@") || statementModule.value.startsWith("$") || statementModule.value.startsWith("?")) {
-            return new BindParameter(statementModule.value);
-        }
-
-
-        const literalValue: RegExp = /(\d+)|('.*')|(X'.*')/gmi;
-        const regExpExecArray: RegExpMatchArray = literalValue.exec(statementModule.value)
-        if (regExpExecArray[1]) {
-            return new LiteralValue(new IntegerType(parseInt(regExpExecArray[0])));
-        }
-        if (regExpExecArray[2] && regExpExecArray[0].startsWith("'") && regExpExecArray[0].endsWith("'")) {
-            let string = regExpExecArray[0].substring(1, regExpExecArray[0].length - 1);
-            return new LiteralValue(new StringType(string));
-        }
-        if (regExpExecArray[3] && regExpExecArray[0].startsWith("X'") && regExpExecArray[0].endsWith("'")) {
-            const blob = regExpExecArray[0].substring(2, regExpExecArray[0].length - 1);
-            return new LiteralValue(new BlobType(blob));
-        }
-
-        return undefined;
-    }
-
-}

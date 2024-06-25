@@ -1,5 +1,7 @@
-import {BindParameter, ExpFactory, LiteralValue} from "./exp";
+import {BindParameter, Column, LiteralValue} from "./exp";
 import {WordModule} from "../../statement-module-parser";
+import {ExpFactory} from "./exp-factory";
+import {BlobType} from "./data-types";
 
 describe('Exp', () => {
 
@@ -44,11 +46,19 @@ describe('Exp', () => {
         });
 
         it('should handle BLOB type', () => {
-            let exp = ExpFactory.createExp([new WordModule("X'1234'", 0, 1)]);
+            let exp = ExpFactory.createExp([new WordModule("X'fff1f2f3f4f5f6f7f8f9f0fff1f2f3f4f5f6f7f8f9'", 0, 1)]);
             expect(exp instanceof LiteralValue).toBe(true);
             expect((exp as LiteralValue).type.sqlType).toBe("BLOB")
-            expect((exp as LiteralValue).type.value).toBe("1234")
+            expect((exp as LiteralValue).type.value).toBe("BLOB")
+            expect(((exp as LiteralValue).type as BlobType).blobValue).toBe("fff1f2f3f4f5f6f7f8f9f0fff1f2f3f4f5f6f7f8f9")
+
         });
+
+        it('should handle invalid BLOB type', () => {
+            expect(() => ExpFactory.createExp([new WordModule("X'fff1f2f3f4f5f6f7f8f9f0fff1f2f3f4f5f6f7f8f'", 0, 1)])).toThrowError("SQLITE_ERROR: sqlite3 result code 1:unrecognized token: \"X'fff1f2f3f4f5f6f7f8f9f0fff1f2f3f4f5f6f7f8f'\"")
+        });
+
+
 
         it('should handle a CURRENT_TIME', () => {
             let exp = ExpFactory.createExp([new WordModule("CURRENT_TIME", 0, 1)]);
@@ -101,9 +111,27 @@ describe('Exp', () => {
             expect((exp as BindParameter).parameter).toBe("@test");
 
         });
-
-
     });
 
+
+    describe('Column', () => {
+
+        it('should handle one column', () => {
+            let exp = ExpFactory.createExp([new WordModule("column", 0, 1)]);
+            expect(exp instanceof Column).toBe(true);
+            expect((exp as Column).column).toBe("column");
+            expect((exp as Column).table).toBeUndefined();
+            expect((exp as Column).schema).toBeUndefined();
+        });
+
+        it('should handle table.column', () => {
+            let exp = ExpFactory.createExp([new WordModule("table", 0, 5), new WordModule(".", 5, 6), new WordModule("column", 6, 7)]);
+            expect(exp instanceof Column).toBe(true);
+            expect((exp as Column).column).toBe("column");
+            expect((exp as Column).table).toBe("table");
+            expect((exp as Column).schema).toBeUndefined();
+        });
+
+    });
 
 });

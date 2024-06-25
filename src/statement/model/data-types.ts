@@ -76,6 +76,10 @@ export class BlobType implements Type {
     }
 
     get value(): any {
+        return 'BLOB';
+    }
+
+    get blobValue(): string {
         return this._value;
     }
 }
