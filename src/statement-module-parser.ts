@@ -19,6 +19,10 @@ export class WordModule implements StatementModule {
                 private _end: number) {
     }
 
+    public test(regex: RegExp): boolean {
+        return regex.test(this.value);
+    }
+
     get value(): string {
         return this._value;
     }

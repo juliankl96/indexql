@@ -1,4 +1,3 @@
-import {TYPE} from "./data-types";
 import {UnaryOperator} from "./unnary-operation";
 import {BitwiseOperation} from "./bitwise-operation";
 import {FilterClaus} from "../clause/filter-clause";
@@ -7,6 +6,17 @@ import {Like, SubExp} from "./sub-exp";
 import {TableFunction} from "./table-function";
 import {SelectStatement} from "../select/select-statement";
 import {RaiseFunctionType} from "./raise-function";
+import {StatementModule, WordModule} from "../../statement-module-parser";
+import {
+    CurrentDateType,
+    CurrentTimeType,
+    FalseType,
+    NullType,
+    NumberType,
+    StringType,
+    TrueType,
+    Type
+} from "./data-types";
 
 /*
 https://www.sqlite.org/syntax/expr.html
@@ -21,23 +31,24 @@ export interface Exp {
 
 export class LiteralValue implements Exp {
 
-    private _value: TYPE;
+    private _type: Type;
 
-    constructor(value: TYPE) {
-        this._value = value;
+    constructor(type: Type) {
+        this._type = type;
     }
 
-    get value(): TYPE {
-        return this._value;
+    get type(): Type {
+        return this._type;
     }
 
     toSql(): string {
-        return this._value.toString();
+        return this._type.toString();
     }
 
     get regex(): RegExp {
         return /((\d+)|('.*')|NULL|FALSE|TRUE|CURRENT_TIME|CURRENT_DATE|CURRENT_TIMESTAMP)/gmi
     }
+
 }
 
 export class BindParameter implements Exp {
@@ -225,10 +236,10 @@ export class ExpressionList implements Exp {
 export class Cast implements Exp {
 
     private _exp: Exp;
-    private _type: TYPE;
+    private _type: Type;
     private _alias?: string;
 
-    constructor(exp: Exp, type: TYPE, alias?: string) {
+    constructor(exp: Exp, type: Type, alias?: string) {
         this._exp = exp;
         this._type = type;
         this._alias = alias;
@@ -238,7 +249,7 @@ export class Cast implements Exp {
         return this._exp;
     }
 
-    get type(): TYPE {
+    get type(): Type {
         return this._type;
     }
 
@@ -495,4 +506,43 @@ export class RaiseFunction implements Exp {
     get regex(): RegExp {
         return undefined;
     }
+}
+
+export class ExpFactory {
+
+    public static createExp(selectModules: StatementModule[], rawStatement: string = selectModules.join(" ")): Exp {
+        if (selectModules.length === 1 && selectModules[0] instanceof WordModule) {
+            return ExpFactory.handleOneWordModule(selectModules[0] as WordModule);
+        }
+        throw new Error("Not implemented");
+    }
+
+    private static handleOneWordModule(statementModule: WordModule): Exp {
+        switch (statementModule.value.toUpperCase()) {
+            case 'NULL':
+                return new LiteralValue(new NullType());
+            case 'FALSE':
+                return new LiteralValue(new FalseType());
+            case 'TRUE':
+                return new LiteralValue(new TrueType());
+            case 'CURRENT_TIME':
+                return new LiteralValue(new CurrentTimeType());
+            case 'CURRENT_DATE':
+                return new LiteralValue(new CurrentDateType());
+            case 'CURRENT_TIMESTAMP':
+                return new LiteralValue(new CurrentTimeType());
+        }
+        const literalValue: RegExp = /(\d+)|('.*')/gmi
+        const regExpExecArray: RegExpMatchArray = literalValue.exec(statementModule.value)
+        if (regExpExecArray[1]) {
+            return new LiteralValue(new NumberType(parseInt(regExpExecArray[0])));
+        }
+        if (regExpExecArray[2] && regExpExecArray[0].startsWith("'") && regExpExecArray[0].endsWith("'")) {
+            let string = regExpExecArray[0].substring(1, regExpExecArray[0].length - 1);
+            return new LiteralValue(new StringType(string));
+        }
+
+        return undefined;
+    }
+
 }
