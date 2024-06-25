@@ -1,4 +1,4 @@
-import {ExpFactory, LiteralValue} from "./exp";
+import {BindParameter, ExpFactory, LiteralValue} from "./exp";
 import {WordModule} from "../../statement-module-parser";
 
 describe('Exp', () => {
@@ -78,8 +78,32 @@ describe('Exp', () => {
             expect(dateStamp[0]).toBeDefined()
         });
 
+    });
+
+    describe('bind-parameter', () => {
+
+        it('should handle ? bind-parameter', () => {
+            let exp = ExpFactory.createExp([new WordModule("?", 0, 1)]);
+            expect(exp instanceof BindParameter).toBe(true);
+            expect((exp as BindParameter).parameter).toBe("?");
+
+        });
+
+        it('should handle ? bind-parameter with type', () => {
+            let exp = ExpFactory.createExp([new WordModule("?INTEGER", 0, 1)]);
+            expect((exp instanceof BindParameter)).toBe(true);
+            expect((exp as BindParameter).parameter).toBe("?INTEGER");
+        });
+
+        it('should handle @ bind parameter', () => {
+            let exp = ExpFactory.createExp([new WordModule("@test", 0, 1)]);
+            expect((exp instanceof BindParameter)).toBe(true);
+            expect((exp as BindParameter).parameter).toBe("@test");
+
+        });
 
 
     });
+
 
 });

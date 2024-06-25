@@ -534,6 +534,12 @@ export class ExpFactory {
             case 'CURRENT_TIMESTAMP':
                 return new LiteralValue(new CurrentTimestampType());
         }
+        // handle bind-parameter
+        if (statementModule.value.startsWith(":") || statementModule.value.startsWith("@") || statementModule.value.startsWith("$") || statementModule.value.startsWith("?")) {
+            return new BindParameter(statementModule.value);
+        }
+
+
         const literalValue: RegExp = /(\d+)|('.*')|(X'.*')/gmi;
         const regExpExecArray: RegExpMatchArray = literalValue.exec(statementModule.value)
         if (regExpExecArray[1]) {

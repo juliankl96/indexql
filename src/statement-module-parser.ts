@@ -74,7 +74,7 @@ export class BracketModule implements StatementModule {
 
 export class StatementModuleParser {
 
-    private wordRegex: RegExp = /(('.*')|(\(.*\))|\w+|[*;,=])/gmi
+    private wordRegex: RegExp = /(([@?$:]\w*)|('.*')|(\(.*\))|\w+|[*;,=])/gmi
 
 
     public createModule(query: string): StatementModule[] {
