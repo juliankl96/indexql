@@ -10,7 +10,7 @@ describe('Exp', () => {
             let exp = ExpFactory.createExp([new WordModule('1', 0, 1)]);
             expect(exp instanceof LiteralValue).toBe(true);
             const literalValue: LiteralValue = exp as LiteralValue;
-            expect(literalValue.type.sqlType).toBe("NUMBER")
+            expect(literalValue.type.sqlType).toBe("INTEGER")
             expect(literalValue.type.value).toBe(1)
 
         });
@@ -43,14 +43,42 @@ describe('Exp', () => {
             expect((exp as LiteralValue).type.value).toBe(null)
         });
 
+        it('should handle BLOB type', () => {
+            let exp = ExpFactory.createExp([new WordModule("X'1234'", 0, 1)]);
+            expect(exp instanceof LiteralValue).toBe(true);
+            expect((exp as LiteralValue).type.sqlType).toBe("BLOB")
+            expect((exp as LiteralValue).type.value).toBe("1234")
+        });
+
         it('should handle a CURRENT_TIME', () => {
             let exp = ExpFactory.createExp([new WordModule("CURRENT_TIME", 0, 1)]);
             expect(exp instanceof LiteralValue).toBe(true);
             expect((exp as LiteralValue).type.sqlType).toBe("CURRENT_TIME")
-            const timeStamp = /(\d{2}):(\d{2}):(\d{2})/.exec((exp as LiteralValue).type.value)
-            expect(timeStamp[1]).toBe("00")
+            const timeRegex: RegExp = /\d{2}:\d{2}:\d{2}/;
+            const timeStamp = timeRegex.exec((exp as LiteralValue).type.value)
+            expect(timeStamp[0]).toBeDefined()
 
         });
+
+        it('should handle a CURRENT_DATE', () => {
+            let exp = ExpFactory.createExp([new WordModule("CURRENT_DATE", 0, 1)]);
+            expect(exp instanceof LiteralValue).toBe(true);
+            expect((exp as LiteralValue).type.sqlType).toBe("CURRENT_DATE")
+            const dateRegex: RegExp = /\d{4}-\d{2}-\d{2}/;
+            const dateStamp = dateRegex.exec((exp as LiteralValue).type.value)
+            expect(dateStamp[0]).toBeDefined()
+        });
+
+        it('should handle a CURRENT_TIMESTAMP', () => {
+            let exp = ExpFactory.createExp([new WordModule("CURRENT_TIMESTAMP", 0, 1)]);
+            expect(exp instanceof LiteralValue).toBe(true);
+            expect((exp as LiteralValue).type.sqlType).toBe("CURRENT_TIMESTAMP")
+            const dateRegex: RegExp = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/;
+            const dateStamp = dateRegex.exec((exp as LiteralValue).type.value)
+            expect(dateStamp[0]).toBeDefined()
+        });
+
+
 
     });
 

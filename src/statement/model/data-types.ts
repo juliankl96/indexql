@@ -18,20 +18,6 @@ export class StringType implements Type {
     }
 }
 
-export class NumberType implements Type {
-
-    constructor(private _value: number) {
-    }
-
-    get sqlType(): string {
-        return 'NUMBER';
-    }
-
-    get value(): any {
-        return this._value;
-    }
-}
-
 export class TrueType implements Type {
 
     get sqlType(): string {
@@ -95,7 +81,7 @@ export class BlobType implements Type {
 }
 
 export class CurrentTimeType implements Type {
- // Like "17:58:29"
+    // Like "17:58:29"
     get sqlType(): string {
         return 'CURRENT_TIME';
     }
@@ -113,7 +99,7 @@ export class CurrentDateType implements Type {
     }
 
     get value(): any {
-        return  new Date().toLocaleString("sv");
+        return new Date().toLocaleString("sv");
     }
 }
 

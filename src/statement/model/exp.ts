@@ -8,11 +8,13 @@ import {SelectStatement} from "../select/select-statement";
 import {RaiseFunctionType} from "./raise-function";
 import {StatementModule, WordModule} from "../../statement-module-parser";
 import {
+    BlobType,
     CurrentDateType,
+    CurrentTimestampType,
     CurrentTimeType,
     FalseType,
+    IntegerType,
     NullType,
-    NumberType,
     StringType,
     TrueType,
     Type
@@ -530,16 +532,20 @@ export class ExpFactory {
             case 'CURRENT_DATE':
                 return new LiteralValue(new CurrentDateType());
             case 'CURRENT_TIMESTAMP':
-                return new LiteralValue(new CurrentTimeType());
+                return new LiteralValue(new CurrentTimestampType());
         }
-        const literalValue: RegExp = /(\d+)|('.*')/gmi
+        const literalValue: RegExp = /(\d+)|('.*')|(X'.*')/gmi;
         const regExpExecArray: RegExpMatchArray = literalValue.exec(statementModule.value)
         if (regExpExecArray[1]) {
-            return new LiteralValue(new NumberType(parseInt(regExpExecArray[0])));
+            return new LiteralValue(new IntegerType(parseInt(regExpExecArray[0])));
         }
         if (regExpExecArray[2] && regExpExecArray[0].startsWith("'") && regExpExecArray[0].endsWith("'")) {
             let string = regExpExecArray[0].substring(1, regExpExecArray[0].length - 1);
             return new LiteralValue(new StringType(string));
+        }
+        if (regExpExecArray[3] && regExpExecArray[0].startsWith("X'") && regExpExecArray[0].endsWith("'")) {
+            const blob = regExpExecArray[0].substring(2, regExpExecArray[0].length - 1);
+            return new LiteralValue(new BlobType(blob));
         }
 
         return undefined;
