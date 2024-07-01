@@ -25,4 +25,5 @@ export class ResultCode {
     }
 }
 
+
 export const SQLITE_ERROR = new ResultCode('SQLITE_ERROR', 1);

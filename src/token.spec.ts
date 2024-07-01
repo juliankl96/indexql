@@ -13,6 +13,12 @@ describe('token', () => {
         expect(tokenIterator.next()).toBe(null);
     });
 
+    it('should handle invalid char in sql', () => {
+       const rawSQL = "SELECT * FROM users;#";
+         expect(() => new TokenIterator(rawSQL)).toThrowError("Invalid token\"#\" found at position 20\" in \"SELECT * FROM users;#\"");
+
+    });
+
     describe('handle type', () => {
         it('should handle SELECT', () => {
             const rawSQL = "SELECT * FROM users;";
