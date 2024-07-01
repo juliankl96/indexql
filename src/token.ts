@@ -1,21 +1,4 @@
-export enum Type {
-    SELECT = 'SELECT',
-    INSERT = 'INSERT',
-    UPDATE = 'UPDATE',
-    DELETE = 'DELETE',
-    CREATE_TABLE = 'CREATE TABLE',
-    DROP_TABLE = 'DROP TABLE',
-    ALTER_TABLE = 'ALTER TABLE',
-    CREATE_INDEX = 'CREATE INDEX',
-    DROP_INDEX = 'DROP INDEX',
-    BEGIN_TRANSACTION = 'BEGIN TRANSACTION',
-    COMMIT = 'COMMIT',
-    ROLLBACK = 'ROLLBACK',
-    VACUUM = 'VACUUM',
-    REINDEX = 'REINDEX',
-    ANALYZE = 'ANALYZE',
-    PRAGMA = 'PRAGMA',
-}
+import {Type} from "./statement/statement";
 
 
 export class TokenIterator {
@@ -84,18 +67,18 @@ export class TokenIterator {
                     return Type.BEGIN_TRANSACTION;
                 }
                 break;
-                case 'COMMIT':
-                    return Type.COMMIT;
-                case 'ROLLBACK':
-                    return Type.ROLLBACK;
-                case 'VACUUM':
-                    return Type.VACUUM;
-                case 'REINDEX':
-                    return Type.REINDEX;
-                case 'ANALYZE':
-                    return Type.ANALYZE;
-                case 'PRAGMA':
-                    return Type.PRAGMA;
+            case 'COMMIT':
+                return Type.COMMIT;
+            case 'ROLLBACK':
+                return Type.ROLLBACK;
+            case 'VACUUM':
+                return Type.VACUUM;
+            case 'REINDEX':
+                return Type.REINDEX;
+            case 'ANALYZE':
+                return Type.ANALYZE;
+            case 'PRAGMA':
+                return Type.PRAGMA;
 
         }
         throw new Error('Unknown type: ' + this.tokens + ' ' + firstToken + ' ' + secondToken + ' ' + thirdToken);
