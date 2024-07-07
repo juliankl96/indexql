@@ -178,9 +178,12 @@ export class ExpFactory {
         }
 
         const binaryOperation = this.handleBinaryOperator(leftResult.token, leftResult.exp);
+        if (binaryOperation.exp) {
+            return binaryOperation;
+        }
 
         let index = leftResult.token;
-        return leftResult;
+        return binaryOperation;
     }
 
 
@@ -192,7 +195,6 @@ export class ExpFactory {
                 return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
             }
         }
-        //SQLITE_ERROR: sqlite3 result code 1: near "~": syntax error
         throw new SqliteError(SQLITE_ERROR, `near "${token.value}": syntax error`);
     }
 }
