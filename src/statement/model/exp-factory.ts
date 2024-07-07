@@ -93,15 +93,17 @@ export class ExpFactory {
     }
 
     protected static handleColumn(token: Token): ExpResult {
-        const columnRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
+        const columnRegex = ()=> /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
         let index = token;
         const subResult: string[] = [];
         for (let i = 0; i < 3; i++) {
-            if (columnRegex.test(index.value)) {
+            if (columnRegex().test(index.value)) {
                 subResult.push(index.value);
                 index = index.next;
+            } else {
+                break;
             }
-            if (index.value === '.') {
+            if (index?.value === '.') {
                 index = index.next;
             } else {
                 break;
@@ -157,7 +159,7 @@ export class ExpFactory {
 
         const column = ExpFactory.handleColumn(token);
         if (column.exp) {
-            return new ExpResult(token.next, column);
+            return column;
         }
 
         const unaryOperator = ExpFactory.handleUnaryOperator(token);

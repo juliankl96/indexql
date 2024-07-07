@@ -123,7 +123,7 @@ describe('Exp', () => {
             });
 
             it('should handle a column with table and schema', () => {
-                const token = new Token("schema.table.column", 0);
+                const token = new TokenArray("schema.table.column").getFirstToken();
                 let expResult = ExpFactory.transformExp(token);
                 expect(expResult.exp).toBeInstanceOf(Column);
                 expect((expResult.exp as Column).column).toBe("column");

@@ -67,23 +67,12 @@ export class TokenArray {
 
     private validateTokens(tokens: Token[], sql: string) {
         let lastPos = 0;
-
+        let replacedSql = sql;
         for (const token of tokens) {
-            if (token.value === '') {
-                throw new Error('Empty token found');
-            }
-            const valueBetweenTokens = sql.substring(lastPos, token.start) || '';
-            for (let i = 0; i < valueBetweenTokens.length; i++) {
-                const char = valueBetweenTokens[i];
-                if (char.trim() !== '') {
-                    throw new Error('Invalid token"' + char + '" found at position ' + lastPos + '" in "' + sql + '"')
-                }
-            }
-            lastPos = token.end;
+            replacedSql = replacedSql.replace(token.value, '');
         }
-        const endBetweenTokens = sql.substring(lastPos) || '';
-        if (endBetweenTokens.trim() !== '') {
-            throw new Error('Invalid token"' + endBetweenTokens + '" found at position ' + lastPos + '" in "' + sql + '"')
+        if (replacedSql.trim().length > 0) {
+            throw new Error('Tokenization failed: ' + replacedSql);
         }
     }
 
