@@ -188,6 +188,7 @@ export class ExpFactory {
         for (const operation of BITWISE_OPERATIONS) {
             if (operation.operator === token.value) {
                 const rightResult = ExpFactory.transformExp(token.next);
+
                 return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
             }
         }

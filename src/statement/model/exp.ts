@@ -13,7 +13,10 @@ https://www.sqlite.org/syntax/expr.html
  */
 export interface Exp {
 
+    name: string;
+
 }
+
 
 /**
  * https://www.sqlite.org/syntax/literal-value.html
@@ -21,6 +24,7 @@ export interface Exp {
 export class LiteralValue implements Exp {
 
     private _type: Type;
+    public readonly name: "LiteralValue"
 
     constructor(type: Type) {
         this._type = type;
@@ -43,7 +47,7 @@ export class LiteralValue implements Exp {
 export class BindParameter implements Exp {
 
     private _parameter: string;
-
+    public readonly name: "BindParameter"
     constructor(parameter: string) {
         this._parameter = parameter;
     }
@@ -66,7 +70,7 @@ export class Column implements Exp {
     private _schema?: string;
     private _table?: string;
     private _column: string;
-
+    public readonly name: "Column"
 
     constructor(column: string, table?: string, schema?: string) {
         this._column = column;
@@ -105,7 +109,7 @@ export class UnaryOperation implements Exp {
 
     private _operator: UnaryOperator;
     private _exp: Exp;
-
+    public readonly name: "UnaryOperation"
     constructor(operator: UnaryOperator, exp: Exp) {
         this._operator = operator;
         this._exp = exp;
@@ -129,7 +133,7 @@ export class BinaryOperation implements Exp {
     private _left: Exp;
     private _right: Exp;
     private _operator: BitwiseOperation
-
+    public readonly name: "BinaryOperation"
     constructor(left: Exp, operator: BitwiseOperation, right: Exp) {
         this._left = left;
         this._right = right;
@@ -161,14 +165,14 @@ export class FunctionCall implements Exp {
     private _arguments: string[];
     private _filterClause?: FilterClaus;
     private _overClause?: OverClause;
-
+    public readonly name: "FunctionCall"
 
     constructor(name: string, args: string[]) {
         this._name = name;
         this._arguments = args;
     }
 
-    get name(): string {
+    get function(): string {
         return this._name;
     }
 
@@ -195,7 +199,7 @@ export class FunctionCall implements Exp {
 export class ExpressionList implements Exp {
 
     private _expressions: Exp[];
-
+    public readonly name: "ExpressionList"
     constructor(expressions: Exp[]) {
         this._expressions = expressions;
     }
@@ -214,6 +218,7 @@ export class Cast implements Exp {
     private _exp: Exp;
     private _type: Type;
     private _alias?: string;
+    public readonly name: "Cast"
 
     constructor(exp: Exp, type: Type, alias?: string) {
         this._exp = exp;
@@ -238,6 +243,8 @@ export class Collate implements Exp {
 
     private _exp: Exp;
     private _collation: string;
+    public readonly name: "Collate"
+
 
     constructor(exp: Exp, collation: string) {
         this._exp = exp;
@@ -262,6 +269,7 @@ export class PatternMatching implements Exp {
     private not: boolean;
     private _subExp: SubExp;
     private _escape?: SubExp;
+    public readonly name: "PatternMatching"
 
     constructor(subExp: SubExp, not: boolean = false, escape?: SubExp) {
         this._subExp = subExp;
@@ -294,6 +302,7 @@ export class NullExp implements Exp {
 
     private _exp: Exp;
     private _state: "ISNULL" | "NOTNULL" | "NOT NULL";
+    public readonly name: "NullExp"
 
     constructor(exp: Exp, state: "ISNULL" | "NOTNULL" | "NOT NULL") {
         this._exp = exp;
@@ -311,6 +320,7 @@ export class Distinct implements Exp {
     private _distinctFrom: boolean;
     private _exp: Exp;
     private _from: Exp;
+    public readonly name: "Distinct"
 
     constructor(exp: Exp, from: Exp, not: boolean = false, distinctFrom: boolean = false) {
         this._exp = exp;
@@ -330,6 +340,7 @@ export class Between implements Exp {
     private _start: Exp;
     private _end: Exp;
     private _not: boolean;
+    public readonly name: "Between"
 
     constructor(exp: Exp, start: Exp, end: Exp, not: boolean = false) {
         this._exp = exp;
@@ -352,6 +363,7 @@ export class In implements Exp {
     private _tableName: string | TableFunction;
     private _tableFunction: TableFunction;
     private _fnList: Exp[];
+    public readonly name: "In"
 
     constructor(exp?: Exp, selection?: Exp[] | SelectStatement, schemaName?: string, tableName?: string, tableFunction?: TableFunction, fnList: Exp[] = [], not: boolean = false) {
         this._exp = exp;
@@ -372,6 +384,7 @@ export class Exists implements Exp {
 
     private _select: SelectStatement;
     private _not: boolean;
+    public readonly name: "Exists"
 
     constructor(select: SelectStatement, not: boolean = false) {
         this._select = select;
@@ -392,6 +405,7 @@ export class Case implements Exp {
     private _case: Exp | null
     private _whenThen: { when: Exp, then: Exp }[];
     private _else?: Exp;
+    public readonly name: "Case"
 
     constructor(caseExp: Exp | null, whenThen: { when: Exp, then: Exp }[], elseExp?: Exp) {
         this._case = caseExp;
@@ -408,6 +422,7 @@ export class RaiseFunction implements Exp {
 
     private _raiseFn: RaiseFunctionType;
     private _error?: string;
+    public readonly name: "RaiseFunction"
 
     constructor(raiseFn: RaiseFunctionType, error?: string) {
         this._raiseFn = raiseFn;

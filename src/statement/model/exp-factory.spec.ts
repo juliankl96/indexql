@@ -162,4 +162,12 @@ describe('Exp', () => {
                 expect(unaryOperation.exp).toBeInstanceOf(LiteralValue);
             });
     });
+
+    describe('BinaryOperation', () => {
+
+        it('should handle a simple binary operation', () => {
+           const token = TokenArray.fromString("'12' OR 34").getFirstToken();
+        });
+
+    });
 });
