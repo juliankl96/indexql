@@ -93,7 +93,7 @@ export class ExpFactory {
     }
 
     protected static handleColumn(token: Token): ExpResult {
-        const columnRegex = ()=> /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
+        const columnRegex = () => /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
         let index = token;
         const subResult: string[] = [];
         for (let i = 0; i < 3; i++) {

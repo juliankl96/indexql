@@ -40,6 +40,8 @@ export class Token {
     public hasNext(): boolean {
         return this._next !== undefined;
     }
+
+
 }
 
 export class TokenArray {
@@ -62,6 +64,7 @@ export class TokenArray {
 
         this.validateTokens(this.tokens, sql);
     }
+
 
 
 
