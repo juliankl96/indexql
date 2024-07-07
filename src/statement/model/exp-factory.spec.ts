@@ -1,4 +1,4 @@
-import {BinaryOperation, BindParameter, Column, LiteralValue, UnaryOperation} from "./exp";
+import {BinaryOperation, BindParameter, Column, FunctionCall, LiteralValue, UnaryOperation} from "./exp";
 import {Token, TokenArray} from "../../token";
 import {ExpFactory} from "./exp-factory";
 import {
@@ -200,6 +200,17 @@ describe('Exp', () => {
             expect(right.right).toBeInstanceOf(LiteralValue);
         });
 
+    });
+
+    describe('Functions', () => {
+
+        it('should handle ltrim', () => {
+            const token = TokenArray.fromString("ltrim('test')").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(FunctionCall);
+            expect((expResult.exp as FunctionCall).name).toBe('ltrim');
+            expect((expResult.exp as FunctionCall).arguments.length).toBe(1);
+        });
 
     });
 });

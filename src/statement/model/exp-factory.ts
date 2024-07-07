@@ -9,7 +9,7 @@ import {
     StringType,
     TrueType
 } from "./data-types";
-import {BinaryOperation, BindParameter, Column, Exp, LiteralValue, UnaryOperation} from "./exp";
+import {BinaryOperation, BindParameter, Column, Exp, FunctionCall, LiteralValue, UnaryOperation} from "./exp";
 import {SQLITE_ERROR, SqliteError} from "../../error/sqlite-error";
 import {Token} from "../../token";
 import {UnaryOperator} from "./unnary-operation";
@@ -126,6 +126,29 @@ export class ExpFactory {
 
     }
 
+    protected static handleFunction(token: Token): ExpResult {
+        const functionNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
+        if (!functionNamePattern.test(token.value)) {
+            return ExpResult.noResult(token);
+        }
+        const functionName = token.value;
+        let index = token.next;
+        if (index?.value !== '(') {
+            return ExpResult.noResult(token);
+        }
+        index = index.next;
+        const args: string[] = [];
+        while (index?.value !== ')') {
+            args.push(index.value);
+            index = index.next;
+            if (index?.value === ',') {
+                index = index.next;
+            }
+        }
+        //TODO: filter-clause and over-clause
+        return new ExpResult(index, new FunctionCall(functionName, args));
+    }
+
     protected static handleUnaryOperator(token: Token): ExpResult {
         switch (token.value) {
             case 'NOT':
@@ -157,6 +180,11 @@ export class ExpFactory {
             return bindParameter;
         }
 
+        const functionExp = ExpFactory.handleFunction(token);
+        if (functionExp.exp) {
+            return functionExp;
+        }
+
         const column = ExpFactory.handleColumn(token);
         if (column.exp) {
             return column;
@@ -166,8 +194,23 @@ export class ExpFactory {
         if (unaryOperator) {
             return unaryOperator;
         }
+
+
         return ExpResult.noResult(token);
     }
+
+
+    private static handleBinaryOperator(token: Token, exp: Exp) {
+        for (const operation of BITWISE_OPERATIONS) {
+            if (operation.operator === token.value) {
+                const rightResult = ExpFactory.transformExp(token.next);
+
+                return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
+            }
+        }
+        throw new SqliteError(SQLITE_ERROR, `near "${token.value}": syntax error`);
+    }
+
 
     public static transformExp(token: Token): ExpResult {
 
@@ -184,17 +227,5 @@ export class ExpFactory {
 
         let index = leftResult.token;
         return binaryOperation;
-    }
-
-
-    private static handleBinaryOperator(token: Token, exp: Exp) {
-        for (const operation of BITWISE_OPERATIONS) {
-            if (operation.operator === token.value) {
-                const rightResult = ExpFactory.transformExp(token.next);
-
-                return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
-            }
-        }
-        throw new SqliteError(SQLITE_ERROR, `near "${token.value}": syntax error`);
     }
 }
