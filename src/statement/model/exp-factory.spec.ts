@@ -193,6 +193,11 @@ describe('Exp', () => {
             const token = TokenArray.fromString("1 | 2 | 3").getFirstToken();
             const expResult = ExpFactory.transformExp(token);
             expect(expResult.exp).toBeInstanceOf(BinaryOperation);
+            expect((expResult.exp as BinaryOperation).left).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as BinaryOperation).right).toBeInstanceOf(BinaryOperation);
+            const right = (expResult.exp as BinaryOperation).right as BinaryOperation;
+            expect(right.left).toBeInstanceOf(LiteralValue);
+            expect(right.right).toBeInstanceOf(LiteralValue);
         });
 
 
