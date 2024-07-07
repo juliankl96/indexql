@@ -192,7 +192,7 @@ export class ExpFactory {
                 return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
             }
         }
-        throw new SqliteError(SQLITE_ERROR, `unrecognized token: "${token.value}"`);
-        return ExpResult.noResult(token);
+        //SQLITE_ERROR: sqlite3 result code 1: near "~": syntax error
+        throw new SqliteError(SQLITE_ERROR, `near "${token.value}": syntax error`);
     }
 }

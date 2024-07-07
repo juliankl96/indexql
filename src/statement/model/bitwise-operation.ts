@@ -18,32 +18,15 @@ export const LEFT_SHIFT: BitwiseOperation = {
     operator: '<<'
 };
 
-export const XOR: BitwiseOperation = {
-    name: 'XOR',
-    operator: '^'
-};
-
-export const BIT_COUNT: BitwiseOperation = {
-    name: 'BIT_COUNT',
-    operator: 'BIT_COUNT()'
-};
-
 export const OR: BitwiseOperation = {
     name: 'OR',
     operator: '|'
 };
 
-export const INVERSION: BitwiseOperation = {
-    name: 'INVERSION',
-    operator: '~'
-};
 
 export const BITWISE_OPERATIONS: BitwiseOperation[] = [
     AND,
     RIGHT_SHIFT,
     LEFT_SHIFT,
-    XOR,
-    BIT_COUNT,
-    OR,
-    INVERSION
+    OR
 ];

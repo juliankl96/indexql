@@ -165,9 +165,26 @@ describe('Exp', () => {
 
     describe('BinaryOperation', () => {
 
-        it('should handle a simple binary operation', () => {
-           const token = TokenArray.fromString("'12' OR 34").getFirstToken();
+        it('should handle a or binary operation', () => {
+           const token = TokenArray.fromString("1 | 2").getFirstToken();
         });
+
+        it('should handle a and binary operation', () => {
+           const token = TokenArray.fromString("1 & 2").getFirstToken();
+        });
+
+        it('should handle a left shift binary operation', () => {
+           const token = TokenArray.fromString("1 << 2").getFirstToken();
+        });
+
+        it('should handle a right shift binary operation', () => {
+           const token = TokenArray.fromString("1 >> 2").getFirstToken();
+        });
+
+        it('should handle a xor binary operation', () => {
+           const token = TokenArray.fromString("1 + 2").getFirstToken();
+        });
+
 
     });
 });
