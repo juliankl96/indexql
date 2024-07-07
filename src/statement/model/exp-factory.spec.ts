@@ -115,7 +115,7 @@ describe('Exp', () => {
             });
 
             it('should handle a column with table', () => {
-                const token = new TokenArray("table.column").getFirstToken();
+                const token = TokenArray.fromString("table.column").getFirstToken();
                 let expResult = ExpFactory.transformExp(token);
                 expect(expResult.exp).toBeInstanceOf(Column);
                 expect((expResult.exp as Column).column).toBe("column");
@@ -123,7 +123,7 @@ describe('Exp', () => {
             });
 
             it('should handle a column with table and schema', () => {
-                const token = new TokenArray("schema.table.column").getFirstToken();
+                const token = TokenArray.fromString("schema.table.column").getFirstToken();
                  let expResult = ExpFactory.transformExp(token);
                 expect(expResult.exp).toBeInstanceOf(Column);
                 expect((expResult.exp as Column).column).toBe("column");
@@ -136,7 +136,7 @@ describe('Exp', () => {
     describe('UnaryOperation', () => {
 
             it('should handle Minus', () => {
-                const token = new TokenArray("- 'test'").getFirstToken();
+                const token = TokenArray.fromString("- 'test'").getFirstToken();
                 let expResult = ExpFactory.transformExp(token);
                 expect(expResult.exp).toBeInstanceOf(UnaryOperation);
                 const unaryOperation = expResult.exp as UnaryOperation;
@@ -145,7 +145,7 @@ describe('Exp', () => {
             });
 
             it('should handle Plus', () => {
-                const token = new TokenArray("+ 'test'").getFirstToken();
+                const token = TokenArray.fromString("+ 'test'").getFirstToken();
                 let expResult = ExpFactory.transformExp(token);
                 expect(expResult.exp).toBeInstanceOf(UnaryOperation);
                 const unaryOperation = expResult.exp as UnaryOperation;
@@ -154,7 +154,7 @@ describe('Exp', () => {
             });
 
             it('should handle BitwiseNot', () => {
-                const token = new TokenArray("~ 'test'").getFirstToken();
+                const token = TokenArray.fromString("~ 'test'").getFirstToken();
                 let expResult = ExpFactory.transformExp(token);
                 expect(expResult.exp).toBeInstanceOf(UnaryOperation);
                 const unaryOperation = expResult.exp as UnaryOperation;

@@ -47,11 +47,15 @@ export class Token {
 export class TokenArray {
 
     private static readonly tokenPattern: RegExp = /\s*(=>|<=|>=|<>|!=|[(),<>;~=*+-/]|[a-zA-Z_][a-zA-Z0-9_]*|'[^']*'|"[^"]*"|`[^`]*`|\d+(\.\d+)?|".*?"|'.*?')\s*/gmi
-    private tokens: Token[];
+    private readonly tokens: Token[];
 
-    constructor(sql: string) {
+    private constructor(tokens: Token[]) {
+        this.tokens = tokens;
+    }
+
+    public static fromString(sql: string): TokenArray {
         let lastToken: Token = null;
-        this.tokens = (sql.match(TokenArray.tokenPattern) || []).map(value => {
+        const tokens = (sql.match(TokenArray.tokenPattern) || []).map(value => {
             const trimmed = value.trim()
             const start = sql.indexOf(trimmed);
             const result = new Token(trimmed, start);
@@ -62,13 +66,12 @@ export class TokenArray {
             return result;
         });
 
-        this.validateTokens(this.tokens, sql);
+        this.validateTokens(tokens, sql);
+        return new TokenArray(tokens);
     }
 
 
-
-
-    private validateTokens(tokens: Token[], sql: string) {
+    private static validateTokens(tokens: Token[], sql : string) {
         let replacedSql = sql;
         for (const token of tokens) {
             replacedSql = replacedSql.replace(token.value, '');

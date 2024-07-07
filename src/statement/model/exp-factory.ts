@@ -9,10 +9,11 @@ import {
     StringType,
     TrueType
 } from "./data-types";
-import {BindParameter, Column, Exp, LiteralValue, UnaryOperation} from "./exp";
+import {BinaryOperation, BindParameter, Column, Exp, LiteralValue, UnaryOperation} from "./exp";
 import {SQLITE_ERROR, SqliteError} from "../../error/sqlite-error";
 import {Token} from "../../token";
 import {UnaryOperator} from "./unnary-operation";
+import {BITWISE_OPERATIONS} from "./bitwise-operation";
 
 /**
  * Result of a expression.
@@ -144,8 +145,7 @@ export class ExpFactory {
         return ExpResult.noResult(token);
     }
 
-
-    public static transformExp(token: Token): ExpResult {
+    private static handleSimpleExp(token: Token): ExpResult {
 
         const handleLiteralValue = ExpFactory.handleLiteralValue(token);
         if (handleLiteralValue.exp) {
@@ -166,10 +166,32 @@ export class ExpFactory {
         if (unaryOperator) {
             return unaryOperator;
         }
-
-
         return ExpResult.noResult(token);
     }
 
+    public static transformExp(token: Token): ExpResult {
 
+
+        const leftResult = ExpFactory.handleSimpleExp(token);
+        if (!leftResult.token?.hasNext()) {
+            return leftResult;
+        }
+
+        const binaryOperation = this.handleBinaryOperator(leftResult.token, leftResult.exp);
+
+        let index = leftResult.token;
+        return leftResult;
+    }
+
+
+    private static handleBinaryOperator(token: Token, exp: Exp) {
+        for (const operation of BITWISE_OPERATIONS) {
+            if (operation.operator === token.value) {
+                const rightResult = ExpFactory.transformExp(token.next);
+                return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
+            }
+        }
+        throw new SqliteError(SQLITE_ERROR, `unrecognized token: "${token.value}"`);
+        return ExpResult.noResult(token);
+    }
 }
