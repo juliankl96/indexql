@@ -44,7 +44,7 @@ export class Token {
 
 export class TokenArray {
 
-    private static readonly tokenPattern: RegExp = /\s*(=>|<=|>=|<>|!=|[(),<>;=*+-/]|[a-zA-Z_][a-zA-Z0-9_]*|'[^']*'|"[^"]*"|`[^`]*`|\d+(\.\d+)?|".*?"|'.*?')\s*/gmi
+    private static readonly tokenPattern: RegExp = /\s*(=>|<=|>=|<>|!=|[(),<>;~=*+-/]|[a-zA-Z_][a-zA-Z0-9_]*|'[^']*'|"[^"]*"|`[^`]*`|\d+(\.\d+)?|".*?"|'.*?')\s*/gmi
     private tokens: Token[];
 
     constructor(sql: string) {
@@ -66,7 +66,6 @@ export class TokenArray {
 
 
     private validateTokens(tokens: Token[], sql: string) {
-        let lastPos = 0;
         let replacedSql = sql;
         for (const token of tokens) {
             replacedSql = replacedSql.replace(token.value, '');
