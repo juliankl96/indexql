@@ -1,5 +1,5 @@
-import {LiteralValue} from "./exp";
-import {Token} from "../../token";
+import {BindParameter, Column, LiteralValue, UnaryOperation} from "./exp";
+import {Token, TokenArray} from "../../token";
 import {ExpFactory} from "./exp-factory";
 import {
     BlobType,
@@ -12,6 +12,7 @@ import {
     StringType,
     TrueType
 } from "./data-types";
+import {UnaryOperator} from "./unnary-operation";
 
 describe('Exp', () => {
 
@@ -93,5 +94,72 @@ describe('Exp', () => {
             expect(format.test((expResult.exp as LiteralValue).type.value)).toBe(true);
         });
 
+    });
+
+    it('should handle BindParameter', () => {
+
+        const token = new Token("$1", 0);
+        let expResult = ExpFactory.transformExp(token);
+        expect(expResult.exp).toBeInstanceOf(BindParameter);
+        expect((expResult.exp as BindParameter).parameter).toBe("$1");
+
+    });
+
+    describe('Column', () => {
+
+            it('should handle a column', () => {
+                const token = new Token("column", 0);
+                let expResult = ExpFactory.transformExp(token);
+                expect(expResult.exp).toBeInstanceOf(Column);
+                expect((expResult.exp as Column).column).toBe("column");
+            });
+
+            it('should handle a column with table', () => {
+                const token = new TokenArray("table.column").getFirstToken();
+                let expResult = ExpFactory.transformExp(token);
+                expect(expResult.exp).toBeInstanceOf(Column);
+                expect((expResult.exp as Column).column).toBe("column");
+                expect((expResult.exp as Column).table).toBe("table");
+            });
+
+            it('should handle a column with table and schema', () => {
+                const token = new Token("schema.table.column", 0);
+                let expResult = ExpFactory.transformExp(token);
+                expect(expResult.exp).toBeInstanceOf(Column);
+                expect((expResult.exp as Column).column).toBe("column");
+                expect((expResult.exp as Column).table).toBe("table");
+                expect((expResult.exp as Column).schema).toBe("schema");
+            });
+
+    });
+
+    describe('UnaryOperation', () => {
+
+            it('should handle Minus', () => {
+                const token = new TokenArray("- 'test'").getFirstToken();
+                let expResult = ExpFactory.transformExp(token);
+                expect(expResult.exp).toBeInstanceOf(UnaryOperation);
+                const unaryOperation = expResult.exp as UnaryOperation;
+                expect(unaryOperation.operator).toBe(UnaryOperator.MINUS);
+                expect(unaryOperation.exp).toBeInstanceOf(LiteralValue);
+            });
+
+            it('should handle Plus', () => {
+                const token = new TokenArray("+ 'test'").getFirstToken();
+                let expResult = ExpFactory.transformExp(token);
+                expect(expResult.exp).toBeInstanceOf(UnaryOperation);
+                const unaryOperation = expResult.exp as UnaryOperation;
+                expect(unaryOperation.operator).toBe(UnaryOperator.PLUS);
+                expect(unaryOperation.exp).toBeInstanceOf(LiteralValue);
+            });
+
+            it('should handle BitwiseNot', () => {
+                const token = new TokenArray("~ 'test'").getFirstToken();
+                let expResult = ExpFactory.transformExp(token);
+                expect(expResult.exp).toBeInstanceOf(UnaryOperation);
+                const unaryOperation = expResult.exp as UnaryOperation;
+                expect(unaryOperation.operator).toBe(UnaryOperator.BITWISE_NOT);
+                expect(unaryOperation.exp).toBeInstanceOf(LiteralValue);
+            });
     });
 });

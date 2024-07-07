@@ -67,7 +67,7 @@ export class ExpFactory {
         const literalValue: RegExp = /^(\d+)|('.*')$/gmi;
         const regExpExecArray: RegExpMatchArray = literalValue.exec(token.value)
         if (!regExpExecArray) {
-            return new ExpResult(token.next, new Column(token.value));
+            return ExpResult.noResult(token);
         }
         if (regExpExecArray[1]) {
             return new ExpResult(token.next, new LiteralValue(new IntegerType(parseInt(regExpExecArray[0]))));
@@ -89,31 +89,37 @@ export class ExpFactory {
         if (token.value.startsWith(":") || token.value.startsWith("@") || token.value.startsWith("$") || token.value.startsWith("?")) {
             return new ExpResult(token, new BindParameter(token.value));
         }
-        return undefined;
+        return ExpResult.noResult(token);
     }
 
-    protected static handleColumn(token: Token): Exp | undefined {
-        // column
+    protected static handleColumn(token: Token): ExpResult {
+        const columnRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
         let index = token;
-        let schema = null;
-        let table = null;
-        let column = index.value;
-        // table.column
-        if (index.hasNext() && index.next.value === '.') {
-            table = column;
-            index = index.next;
-            column = index.next.value;
-        } else {
-            return new Column(column);
+        const subResult: string[] = [];
+        for (let i = 0; i < 3; i++) {
+            if (columnRegex.test(index.value)) {
+                subResult.push(index.value);
+                index = index.next;
+            }
+            if (index.value === '.') {
+                index = index.next;
+            } else {
+                break;
+            }
         }
-        // schema.table.column
-        if (index.hasNext() && index.next.value === '.') {
-            schema = table;
-            table = column;
-            index = index.next;
-            column = index.next.value;
+        if (subResult.length === 0) {
+            return ExpResult.noResult(token);
         }
-        return new Column(column, table, schema);
+        if (subResult.length === 1) {
+            return new ExpResult(index, new Column(subResult[0]));
+        }
+        if (subResult.length === 2) {
+            return new ExpResult(index, new Column(subResult[1], subResult[0]));
+        }
+        if (subResult.length === 3) {
+            return new ExpResult(index, new Column(subResult[2], subResult[1], subResult[0]));
+        }
+        return ExpResult.noResult(token);
 
     }
 
@@ -121,16 +127,16 @@ export class ExpFactory {
         switch (token.value) {
             case 'NOT':
                 const expResult = ExpFactory.transformExp(token.next);
-                return new ExpResult(expResult.token.next, new UnaryOperation(UnaryOperator.NOT, expResult.exp));
+                return new ExpResult(expResult.token?.next, new UnaryOperation(UnaryOperator.NOT, expResult.exp));
             case '-':
                 const expResultMinus = ExpFactory.transformExp(token.next);
-                return new ExpResult(expResultMinus.token.next, new UnaryOperation(UnaryOperator.MINUS, expResultMinus.exp));
+                return new ExpResult(expResultMinus.token?.next, new UnaryOperation(UnaryOperator.MINUS, expResultMinus.exp));
             case '+':
                 const expResultPlus = ExpFactory.transformExp(token.next);
-                return new ExpResult(expResultPlus.token.next, new UnaryOperation(UnaryOperator.PLUS, expResultPlus.exp));
+                return new ExpResult(expResultPlus.token?.next, new UnaryOperation(UnaryOperator.PLUS, expResultPlus.exp));
             case '~':
                 const expResultBitwiseNot = ExpFactory.transformExp(token.next);
-                return new ExpResult(expResultBitwiseNot.token.next, new UnaryOperation(UnaryOperator.BITWISE_NOT, expResultBitwiseNot.exp));
+                return new ExpResult(expResultBitwiseNot.token?.next, new UnaryOperation(UnaryOperator.BITWISE_NOT, expResultBitwiseNot.exp));
         }
 
         return ExpResult.noResult(token);
@@ -139,21 +145,27 @@ export class ExpFactory {
 
     public static transformExp(token: Token): ExpResult {
 
-
         const handleLiteralValue = ExpFactory.handleLiteralValue(token);
         if (handleLiteralValue.exp) {
             return handleLiteralValue;
         }
 
         const bindParameter = ExpFactory.handleBindParameter(token);
-        if (bindParameter) {
+        if (bindParameter.exp) {
             return bindParameter;
+        }
+
+        const column = ExpFactory.handleColumn(token);
+        if (column.exp) {
+            return new ExpResult(token.next, column);
         }
 
         const unaryOperator = ExpFactory.handleUnaryOperator(token);
         if (unaryOperator) {
             return unaryOperator;
         }
+
+
         return ExpResult.noResult(token);
     }
 

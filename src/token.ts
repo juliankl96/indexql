@@ -1,5 +1,6 @@
 import {Type} from "./statement/statement";
 
+
 export class Token {
     private _value: string;
     private _startPos: number;
@@ -64,15 +65,14 @@ export class TokenArray {
 
 
 
-    private validateTokens(rawtokens: Token[], sql: string) {
+    private validateTokens(tokens: Token[], sql: string) {
         let lastPos = 0;
-        const endToken: Token = new Token(null, sql.length);
-        const tokens = rawtokens.concat([endToken]);
+
         for (const token of tokens) {
             if (token.value === '') {
                 throw new Error('Empty token found');
             }
-            const valueBetweenTokens = sql.substring(lastPos, token.start);
+            const valueBetweenTokens = sql.substring(lastPos, token.start) || '';
             for (let i = 0; i < valueBetweenTokens.length; i++) {
                 const char = valueBetweenTokens[i];
                 if (char.trim() !== '') {
@@ -80,6 +80,10 @@ export class TokenArray {
                 }
             }
             lastPos = token.end;
+        }
+        const endBetweenTokens = sql.substring(lastPos) || '';
+        if (endBetweenTokens.trim() !== '') {
+            throw new Error('Invalid token"' + endBetweenTokens + '" found at position ' + lastPos + '" in "' + sql + '"')
         }
     }
 
