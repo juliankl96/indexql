@@ -2,80 +2,89 @@ import {Type} from "./statement/statement";
 
 export class Token {
     private _value: string;
-    private _start: number;
+    private _startPos: number;
+    private _next: Token | undefined;
 
-    constructor(value: string, start: number) {
+    constructor(value: string, start: number, next?: Token) {
         this._value = value;
-        this._start = start;
+        this._startPos = start;
+        this._next = next;
     }
 
     get value(): string {
         return this._value;
     }
 
+    /**
+     * The position of the token in the sql string
+     * @return {number}
+     **/
     get start(): number {
-        return this._start;
+        return this._startPos;
     }
 
     get end(): number {
-        return this._start + this._value.length;
+        return this._startPos + this._value.length;
 
+    }
+
+    get next(): Token {
+        return this._next;
+    }
+
+    set next(value: Token) {
+        this._next = value;
+    }
+
+    public hasNext(): boolean {
+        return this._next !== undefined;
     }
 }
 
-export class TokenIterator {
+export class TokenArray {
 
     private static readonly tokenPattern: RegExp = /\s*(=>|<=|>=|<>|!=|[(),<>;=*+-/]|[a-zA-Z_][a-zA-Z0-9_]*|'[^']*'|"[^"]*"|`[^`]*`|\d+(\.\d+)?|".*?"|'.*?')\s*/gmi
-    private sql: string;
-    private position: number;
     private tokens: Token[];
-    private currentToken: Token;
 
-    constructor(sql) {
-        this.sql = sql;
-        this.position = 0;
-        this.tokens = (this.sql.match(TokenIterator.tokenPattern) || []).map(value => {
+    constructor(sql: string) {
+        let lastToken: Token = null;
+        this.tokens = (sql.match(TokenArray.tokenPattern) || []).map(value => {
             const trimmed = value.trim()
-            const start = this.sql.indexOf(trimmed);
-            return new Token(trimmed, start);
+            const start = sql.indexOf(trimmed);
+            const result = new Token(trimmed, start);
+            if (lastToken) {
+                lastToken.next = result;
+            }
+            lastToken = result;
+            return result;
         });
-        this.currentToken = null;
-        this.validateTokens();
+
+        this.validateTokens(this.tokens, sql);
     }
 
-    protected validateTokens() {
+
+
+    private validateTokens(rawtokens: Token[], sql: string) {
         let lastPos = 0;
-        const endToken: Token = new Token(null, this.sql.length);
-        const tokens = this.tokens.concat([endToken]);
+        const endToken: Token = new Token(null, sql.length);
+        const tokens = rawtokens.concat([endToken]);
         for (const token of tokens) {
             if (token.value === '') {
                 throw new Error('Empty token found');
             }
-            const valueBetweenTokens = this.sql.substring(lastPos, token.start);
+            const valueBetweenTokens = sql.substring(lastPos, token.start);
             for (let i = 0; i < valueBetweenTokens.length; i++) {
                 const char = valueBetweenTokens[i];
                 if (char.trim() !== '') {
-                    throw new Error('Invalid token"' + char + '" found at position ' + lastPos + '" in "' + this.sql + '"')
+                    throw new Error('Invalid token"' + char + '" found at position ' + lastPos + '" in "' + sql + '"')
                 }
             }
             lastPos = token.end;
         }
     }
 
-    public hasNext(): boolean {
-        return this.position < this.tokens.length;
-    }
-
-    public next(): string {
-        if (!this.hasNext()) {
-            return null;
-        }
-        this.currentToken = this.tokens[this.position++];
-        return this.currentToken.value;
-    }
-
-    public currentPos(): number {
-        return this.currentToken.start;
+    public getFirstToken(): Token {
+        return this.tokens[0];
     }
 
     public type(): Type {
@@ -133,5 +142,6 @@ export class TokenIterator {
         }
         throw new Error('Unknown type: ' + this.tokens + ' ' + firstToken + ' ' + secondToken + ' ' + thirdToken);
     }
+
 
 }

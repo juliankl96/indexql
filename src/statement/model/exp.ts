@@ -15,6 +15,9 @@ export interface Exp {
 
 }
 
+/**
+ * https://www.sqlite.org/syntax/literal-value.html
+ */
 export class LiteralValue implements Exp {
 
     private _type: Type;
