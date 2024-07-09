@@ -13,6 +13,7 @@ import {
     BinaryOperation,
     BindParameter,
     Cast,
+    Collate,
     Column,
     Exp,
     ExpressionList,
@@ -214,10 +215,11 @@ export class ExpFactory {
             index = filterClauseResult.token;
             filterClause = new FilterClaus(filterClauseResult.exp);
         }
-       // const overClauseResult = ExpFactory.handleOverClause(index);
+        // const overClauseResult = ExpFactory.handleOverClause(index);
 
         return new ExpResult(index, new FunctionCall(functionName, args, filterClause, overClause));
     }
+
     protected static handleCast(token: Token) {
         if (token.value.toUpperCase() !== 'CAST') {
             return ExpResult.noResult(token);
@@ -242,7 +244,7 @@ export class ExpFactory {
             throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
         }
         index = index.next;
-        return new ExpResult(index, new Cast(expResult.exp,type));
+        return new ExpResult(index, new Cast(expResult.exp, type));
     }
 
     protected static handleUnaryOperator(token: Token): ExpResult {
@@ -304,6 +306,14 @@ export class ExpFactory {
         return ExpResult.noResult(token);
     }
 
+    protected static handleCollate(token: Token, exp: Exp) {
+        if (token.value.toUpperCase() !== 'COLLATE') {
+            return ExpResult.noResult(token);
+        }
+        const collateName = token.next.value;
+        return new ExpResult(token.next.next, new Collate(exp, collateName));
+    }
+
 
     private static handleBinaryOperator(token: Token, exp: Exp) {
         for (const operation of BITWISE_OPERATIONS) {
@@ -330,9 +340,13 @@ export class ExpFactory {
             return binaryOperation;
         }
 
+        const collate = this.handleCollate(leftResult.token, leftResult.exp);
+        if (collate.exp) {
+            return collate;
+        }
+
         return leftResult;
     }
-
 
 
 }

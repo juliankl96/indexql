@@ -1,6 +1,7 @@
 import {
     BinaryOperation,
     BindParameter,
+    Collate,
     Column,
     ExpressionList,
     FunctionCall,
@@ -230,6 +231,18 @@ describe('Exp', () => {
             expect((expResult.exp as ExpressionList).expressions.length).toBe(2);
             expect((expResult.exp as ExpressionList).expressions[0]).toBeInstanceOf(LiteralValue);
             expect((expResult.exp as ExpressionList).expressions[1]).toBeInstanceOf(LiteralValue);
+        });
+
+    });
+
+    describe('Collate', () => {
+
+        it('should handle collate', () => {
+            const token = TokenArray.fromString("column COLLATE NOCASE").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(Collate);
+            expect((expResult.exp as Collate).collation).toBe('NOCASE');
+            expect((expResult.exp as Collate).exp).toBeInstanceOf(Column);
         });
 
     });
