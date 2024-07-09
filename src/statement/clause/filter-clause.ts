@@ -12,8 +12,5 @@ export class FilterClaus{
         return this._exp;
     }
 
-    toSql(): string {
-        return `WHERE ${this._exp.toSql()}`;
-    }
 
 }

@@ -167,12 +167,14 @@ export class FunctionCall implements Exp {
     private _overClause?: OverClause;
     public readonly name: "FunctionCall"
 
-    constructor(name: string, args: string[]) {
+    constructor(name: string, args: string[], filterClause?: FilterClaus, overClause?: OverClause) {
         this._name = name;
         this._arguments = args;
+        this._filterClause = filterClause;
+        this._overClause = overClause;
     }
 
-    get function(): string {
+    get functionName(): string {
         return this._name;
     }
 
@@ -180,20 +182,14 @@ export class FunctionCall implements Exp {
         return this._arguments;
     }
 
-    toSql(): string {
-        let result = `${this._name}(${this._arguments.join(', ')})`;
-        if (this._filterClause) {
-            result += this._filterClause.toSql();
-        }
-        if (this._overClause) {
-            result += this._overClause.toSql();
-        }
-        return result;
+    get filterClause(): FilterClaus {
+        return this._filterClause;
     }
 
-    get regex(): RegExp {
-        return undefined;
+    get overClause(): OverClause {
+        return this._overClause;
     }
+
 }
 
 export class ExpressionList implements Exp {

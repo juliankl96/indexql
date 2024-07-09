@@ -9,11 +9,22 @@ import {
     StringType,
     TrueType
 } from "./data-types";
-import {BinaryOperation, BindParameter, Column, Exp, FunctionCall, LiteralValue, UnaryOperation} from "./exp";
+import {
+    BinaryOperation,
+    BindParameter,
+    Column,
+    Exp,
+    ExpressionList,
+    FunctionCall,
+    LiteralValue,
+    UnaryOperation
+} from "./exp";
 import {SQLITE_ERROR, SqliteError} from "../../error/sqlite-error";
 import {Token} from "../../token";
 import {UnaryOperator} from "./unnary-operation";
 import {BITWISE_OPERATIONS} from "./bitwise-operation";
+import {FilterClaus} from "../clause/filter-clause";
+import {OverClause} from "../clause/over-clause";
 
 /**
  * Result of a expression.
@@ -126,7 +137,54 @@ export class ExpFactory {
 
     }
 
+    protected static handleFilterClause(token: Token): ExpResult {
+        if (!token.test("FILTER", "(", "WHERE")) {
+            return ExpResult.noResult(token);
+        }
+        let index = token.jump(3)
+        const expResult = ExpFactory.transformExp(index);
+        if (expResult.exp) {
+            index = expResult.token;
+        } else {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        index = index?.next
+        if (index.value !== ')') {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        return new ExpResult(index, expResult.exp);
+    }
+
+    protected static handleOverClause(index: Token) {
+        throw new Error("Method not implemented.");
+    }
+
+    protected static handleExpressionList(token: Token): ExpResult {
+        if (token.value !== '(') {
+            return ExpResult.noResult(token);
+        }
+        let index = token.next;
+        const elements: Exp[] = [];
+        while (index?.value !== ')') {
+            const expResult = ExpFactory.transformExp(index);
+            if (expResult.exp) {
+                elements.push(expResult.exp);
+                index = expResult.token;
+            } else {
+                throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+            }
+            if (index?.value === ',') {
+                index = index.next;
+            }
+        }
+        index = index.next;
+        return new ExpResult(index, new ExpressionList(elements));
+    }
+
+
     protected static handleFunction(token: Token): ExpResult {
+        let filterClause: FilterClaus = undefined;
+        let overClause: OverClause = undefined;
         const functionNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/gmi;
         if (!functionNamePattern.test(token.value)) {
             return ExpResult.noResult(token);
@@ -145,8 +203,19 @@ export class ExpFactory {
                 index = index.next;
             }
         }
-        //TODO: filter-clause and over-clause
-        return new ExpResult(index, new FunctionCall(functionName, args));
+        index = index?.next;
+        if (index === undefined) {
+            return new ExpResult(index, new FunctionCall(functionName, args));
+        }
+
+        const filterClauseResult = ExpFactory.handleFilterClause(index);
+        if (filterClauseResult.exp) {
+            index = filterClauseResult.token;
+            filterClause = new FilterClaus(filterClauseResult.exp);
+        }
+        const overClauseResult = ExpFactory.handleOverClause(index);
+
+        return new ExpResult(index, new FunctionCall(functionName, args, filterClause, overClause));
     }
 
     protected static handleUnaryOperator(token: Token): ExpResult {
@@ -185,6 +254,11 @@ export class ExpFactory {
             return functionExp;
         }
 
+        const expressionList = ExpFactory.handleExpressionList(token);
+        if (expressionList.exp) {
+            return expressionList;
+        }
+
         const column = ExpFactory.handleColumn(token);
         if (column.exp) {
             return column;
@@ -194,7 +268,6 @@ export class ExpFactory {
         if (unaryOperator) {
             return unaryOperator;
         }
-
 
         return ExpResult.noResult(token);
     }
@@ -228,4 +301,6 @@ export class ExpFactory {
         let index = leftResult.token;
         return binaryOperation;
     }
+
+
 }

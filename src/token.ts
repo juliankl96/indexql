@@ -33,6 +33,20 @@ export class Token {
         return this._next;
     }
 
+    public jump(number: number): Token {
+        if (number < 0) {
+            throw new Error('Negative jump not allowed');
+        }
+        let index: Token = this;
+        for (let i = 0; i < number; i++) {
+            index = index.next;
+            if (index === undefined) {
+                throw new Error('Jumped out of bounds');
+            }
+        }
+        return index;
+    }
+
     set next(value: Token) {
         this._next = value;
     }
@@ -42,6 +56,17 @@ export class Token {
     }
 
 
+    test(...filter: string[]) {
+        let index: Token = this;
+        for (const f of filter) {
+            if (index?.value === f) {
+                index = index.next;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 export class TokenArray {
@@ -71,7 +96,7 @@ export class TokenArray {
     }
 
 
-    private static validateTokens(tokens: Token[], sql : string) {
+    private static validateTokens(tokens: Token[], sql: string) {
         let replacedSql = sql;
         for (const token of tokens) {
             replacedSql = replacedSql.replace(token.value, '');

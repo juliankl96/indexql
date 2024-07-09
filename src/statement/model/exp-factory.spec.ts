@@ -208,7 +208,7 @@ describe('Exp', () => {
             const token = TokenArray.fromString("ltrim('test')").getFirstToken();
             const expResult = ExpFactory.transformExp(token);
             expect(expResult.exp).toBeInstanceOf(FunctionCall);
-            expect((expResult.exp as FunctionCall).name).toBe('ltrim');
+            expect((expResult.exp as FunctionCall).functionName).toBe('ltrim');
             expect((expResult.exp as FunctionCall).arguments.length).toBe(1);
         });
 
