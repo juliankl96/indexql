@@ -5,7 +5,7 @@ import {OverClause} from "../clause/over-clause";
 import {Like, SubExp} from "./sub-exp";
 import {TableFunction} from "./table-function";
 import {RaiseFunctionType} from "./raise-function";
-import {Type} from "./data-types";
+import {DataType} from "./data-types";
 import {SelectStatement} from "../select-statement";
 
 /*
@@ -23,14 +23,14 @@ export interface Exp {
  */
 export class LiteralValue implements Exp {
 
-    private _type: Type;
+    private _type: DataType;
     public readonly name: "LiteralValue"
 
-    constructor(type: Type) {
+    constructor(type: DataType) {
         this._type = type;
     }
 
-    get type(): Type {
+    get type(): DataType {
         return this._type;
     }
 
@@ -48,6 +48,7 @@ export class BindParameter implements Exp {
 
     private _parameter: string;
     public readonly name: "BindParameter"
+
     constructor(parameter: string) {
         this._parameter = parameter;
     }
@@ -110,6 +111,7 @@ export class UnaryOperation implements Exp {
     private _operator: UnaryOperator;
     private _exp: Exp;
     public readonly name: "UnaryOperation"
+
     constructor(operator: UnaryOperator, exp: Exp) {
         this._operator = operator;
         this._exp = exp;
@@ -134,6 +136,7 @@ export class BinaryOperation implements Exp {
     private _right: Exp;
     private _operator: BitwiseOperation
     public readonly name: "BinaryOperation"
+
     constructor(left: Exp, operator: BitwiseOperation, right: Exp) {
         this._left = left;
         this._right = right;
@@ -196,6 +199,7 @@ export class ExpressionList implements Exp {
 
     private _expressions: Exp[];
     public readonly name: "ExpressionList"
+
     constructor(expressions: Exp[]) {
         this._expressions = expressions;
     }
@@ -212,21 +216,19 @@ export class ExpressionList implements Exp {
 export class Cast implements Exp {
 
     private _exp: Exp;
-    private _type: Type;
-    private _alias?: string;
+    private _type: string;
     public readonly name: "Cast"
 
-    constructor(exp: Exp, type: Type, alias?: string) {
+    constructor(exp: Exp, type?: string) {
         this._exp = exp;
         this._type = type;
-        this._alias = alias;
     }
 
     get exp(): Exp {
         return this._exp;
     }
 
-    get type(): Type {
+    get type(): string {
         return this._type;
     }
 

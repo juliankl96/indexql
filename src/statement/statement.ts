@@ -17,6 +17,7 @@ export enum Type {
     PRAGMA = 'PRAGMA',
 }
 
+
 export interface Statement {
     type: Type;
 }

@@ -12,6 +12,7 @@ import {
 import {
     BinaryOperation,
     BindParameter,
+    Cast,
     Column,
     Exp,
     ExpressionList,
@@ -217,6 +218,32 @@ export class ExpFactory {
 
         return new ExpResult(index, new FunctionCall(functionName, args, filterClause, overClause));
     }
+    protected static handleCast(token: Token) {
+        if (token.value.toUpperCase() !== 'CAST') {
+            return ExpResult.noResult(token);
+        }
+        let index = token.next;
+        if (index?.value !== '(') {
+            return ExpResult.noResult(token);
+        }
+        index = index.next;
+        const expResult = ExpFactory.transformExp(index);
+        if (!expResult.exp) {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        index = expResult.token;
+        if (index?.value !== 'AS') {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        index = index.next;
+        const type = index.value;
+        index = index.next;
+        if (index?.value !== ')') {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        index = index.next;
+        return new ExpResult(index, new Cast(expResult.exp,type));
+    }
 
     protected static handleUnaryOperator(token: Token): ExpResult {
         switch (token.value) {
@@ -247,6 +274,11 @@ export class ExpFactory {
         const bindParameter = ExpFactory.handleBindParameter(token);
         if (bindParameter.exp) {
             return bindParameter;
+        }
+
+        const castExp = ExpFactory.handleCast(token);
+        if (castExp.exp) {
+            return castExp;
         }
 
         const functionExp = ExpFactory.handleFunction(token);
@@ -300,6 +332,7 @@ export class ExpFactory {
 
         return leftResult;
     }
+
 
 
 }
