@@ -155,7 +155,7 @@ export class ExpFactory {
         return new ExpResult(index, expResult.exp);
     }
 
-    protected static handleOverClause(index: Token) {
+    protected static handleOverClause(_index: Token) {
         throw new Error("Method not implemented.");
     }
 
@@ -213,7 +213,7 @@ export class ExpFactory {
             index = filterClauseResult.token;
             filterClause = new FilterClaus(filterClauseResult.exp);
         }
-        const overClauseResult = ExpFactory.handleOverClause(index);
+       // const overClauseResult = ExpFactory.handleOverClause(index);
 
         return new ExpResult(index, new FunctionCall(functionName, args, filterClause, overClause));
     }
@@ -281,7 +281,7 @@ export class ExpFactory {
                 return new ExpResult(rightResult.token, new BinaryOperation(exp, operation, rightResult.exp));
             }
         }
-        throw new SqliteError(SQLITE_ERROR, `near "${token.value}": syntax error`);
+        return ExpResult.noResult(token);
     }
 
 
@@ -298,8 +298,7 @@ export class ExpFactory {
             return binaryOperation;
         }
 
-        let index = leftResult.token;
-        return binaryOperation;
+        return leftResult;
     }
 
 

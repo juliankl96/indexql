@@ -1,4 +1,12 @@
-import {BinaryOperation, BindParameter, Column, FunctionCall, LiteralValue, UnaryOperation} from "./exp";
+import {
+    BinaryOperation,
+    BindParameter,
+    Column,
+    ExpressionList,
+    FunctionCall,
+    LiteralValue,
+    UnaryOperation
+} from "./exp";
 import {Token, TokenArray} from "../../token";
 import {ExpFactory} from "./exp-factory";
 import {
@@ -210,6 +218,18 @@ describe('Exp', () => {
             expect(expResult.exp).toBeInstanceOf(FunctionCall);
             expect((expResult.exp as FunctionCall).functionName).toBe('ltrim');
             expect((expResult.exp as FunctionCall).arguments.length).toBe(1);
+        });
+    });
+
+    describe('ExpressionList', () => {
+
+        it('should handle 2 expressions', () => {
+            const token = TokenArray.fromString("(1, 2)").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(ExpressionList);
+            expect((expResult.exp as ExpressionList).expressions.length).toBe(2);
+            expect((expResult.exp as ExpressionList).expressions[0]).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as ExpressionList).expressions[1]).toBeInstanceOf(LiteralValue);
         });
 
     });
