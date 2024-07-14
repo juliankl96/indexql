@@ -19,6 +19,8 @@ import {
     ExpressionList,
     FunctionCall,
     LiteralValue,
+    NullExp,
+    PatternMatching,
     UnaryOperation
 } from "./exp";
 import {SQLITE_ERROR, SqliteError} from "../../error/sqlite-error";
@@ -326,12 +328,63 @@ export class ExpFactory {
         return ExpResult.noResult(token);
     }
 
+    protected static handlePatternMatcher(token: Token, exp: Exp) {
+        let not: boolean = false;
+        let index: Token = token;
+        let escape: Exp = undefined;
+        if (index.value.toUpperCase() === 'NOT') {
+            not = true;
+            index = index.next;
+        }
+
+        if (index.value.toUpperCase() !== 'LIKE') {
+            return ExpResult.noResult(token);
+        }
+        index = index.next;
+        const subExpResult = ExpFactory.transformExp(index);
+        if (!subExpResult.exp) {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        index = subExpResult.token;
+
+        if (index.value.toUpperCase() !== 'ESCAPE') {
+            return ExpResult.noResult(token);
+        }
+        index = index.next;
+        const escapeExpResult = ExpFactory.transformExp(index);
+        if (!escapeExpResult.exp) {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        escape = escapeExpResult.exp;
+        index = escapeExpResult.token;
+        return new ExpResult(index, new PatternMatching(subExpResult.exp, not, escape));
+
+    }
+
+
+    public static handleNull(token: Token, exp: Exp): ExpResult {
+        if (token.value.toUpperCase() == 'ISNULL') {
+            const nullExp: NullExp = new NullExp(exp, "ISNULL");
+            return new ExpResult(token.next, nullExp);
+        }
+        if (token.value.toUpperCase() == 'NOTNULL') {
+            const nullExp: NullExp = new NullExp(exp, "NOTNULL");
+            return new ExpResult(token.next, nullExp);
+        }
+        if (token.value.toUpperCase() !== 'NOT') {
+            return ExpResult.noResult(token);
+        }
+        const index = token.next
+        if (index?.value?.toUpperCase() !== 'NULL') {
+            return ExpResult.noResult(token);
+        }
+        return new ExpResult(index.next, new NullExp(exp, "NOT NULL"));
+    }
 
     public static transformExp(token: Token): ExpResult {
 
-
         const leftResult = ExpFactory.handleSimpleExp(token);
-        if (!leftResult.token?.hasNext()) {
+        if (!leftResult.token) {
             return leftResult;
         }
 
@@ -343,6 +396,16 @@ export class ExpFactory {
         const collate = this.handleCollate(leftResult.token, leftResult.exp);
         if (collate.exp) {
             return collate;
+        }
+
+        const subExp = this.handlePatternMatcher(leftResult.token, leftResult.exp);
+        if (subExp.exp) {
+            return subExp;
+        }
+
+        const nullExp = this.handleNull(leftResult.token, leftResult.exp);
+        if (nullExp.exp) {
+            return nullExp;
         }
 
         return leftResult;

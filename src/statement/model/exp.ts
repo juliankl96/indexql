@@ -2,7 +2,7 @@ import {UnaryOperator} from "./unnary-operation";
 import {BitwiseOperation} from "./bitwise-operation";
 import {FilterClaus} from "../clause/filter-clause";
 import {OverClause} from "../clause/over-clause";
-import {Like, SubExp} from "./sub-exp";
+import {Like} from "./sub-exp";
 import {TableFunction} from "./table-function";
 import {RaiseFunctionType} from "./raise-function";
 import {DataType} from "./data-types";
@@ -23,7 +23,7 @@ export interface Exp {
  */
 export class LiteralValue implements Exp {
 
-    private _type: DataType;
+    private readonly _type: DataType;
     public readonly name: "LiteralValue"
 
     constructor(type: DataType) {
@@ -34,19 +34,11 @@ export class LiteralValue implements Exp {
         return this._type;
     }
 
-    toSql(): string {
-        return this._type.toString();
-    }
-
-    get regex(): RegExp {
-        return /((\d+)|('.*')|NULL|FALSE|TRUE|CURRENT_TIME|CURRENT_DATE|CURRENT_TIMESTAMP)/gmi
-    }
-
 }
 
 export class BindParameter implements Exp {
 
-    private _parameter: string;
+    private readonly _parameter: string;
     public readonly name: "BindParameter"
 
     constructor(parameter: string) {
@@ -55,14 +47,6 @@ export class BindParameter implements Exp {
 
     get parameter(): string {
         return this._parameter;
-    }
-
-    toSql(): string {
-        return this._parameter;
-    }
-
-    get regex(): RegExp {
-        return /((([?:@$])<\w+>)|(\?))/gmi
     }
 }
 
@@ -91,25 +75,12 @@ export class Column implements Exp {
         return this._schema;
     }
 
-    toSql(): string {
-        if (this._schema) {
-            return `${this._schema}.${this._table}.${this._column}`;
-        }
-        if (this._table) {
-            return `${this._table}.${this._column}`;
-        }
-        return this._column;
-    }
-
-    get regex(): RegExp {
-        return /((\w+)\.)?((\w+)\.)?(\w+)/gmi
-    }
 }
 
 export class UnaryOperation implements Exp {
 
-    private _operator: UnaryOperator;
-    private _exp: Exp;
+    private readonly _operator: UnaryOperator;
+    private readonly _exp: Exp;
     public readonly name: "UnaryOperation"
 
     constructor(operator: UnaryOperator, exp: Exp) {
@@ -132,8 +103,8 @@ export class UnaryOperation implements Exp {
 
 export class BinaryOperation implements Exp {
 
-    private _left: Exp;
-    private _right: Exp;
+    private readonly _left: Exp;
+    private readonly _right: Exp;
     private _operator: BitwiseOperation
     public readonly name: "BinaryOperation"
 
@@ -151,23 +122,15 @@ export class BinaryOperation implements Exp {
         return this._right;
     }
 
-    get operator(): BitwiseOperation {
-        return this._operator;
-    }
-
-    get regex(): RegExp {
-        return /(.+) (&|>>|<<|XOR|BIT_COUNT\(\)|\||~) (.+)/gmi
-    }
-
 }
 
 
 export class FunctionCall implements Exp {
 
-    private _name: string;
-    private _arguments: string[];
-    private _filterClause?: FilterClaus;
-    private _overClause?: OverClause;
+    private readonly _name: string;
+    private readonly _arguments: string[];
+    private readonly _filterClause?: FilterClaus;
+    private readonly _overClause?: OverClause;
     public readonly name: "FunctionCall"
 
     constructor(name: string, args: string[], filterClause?: FilterClaus, overClause?: OverClause) {
@@ -208,9 +171,6 @@ export class ExpressionList implements Exp {
         return this._expressions;
     }
 
-    get regex(): RegExp {
-        return undefined;
-    }
 }
 
 export class Cast implements Exp {
@@ -264,36 +224,32 @@ export class Collate implements Exp {
 
 export class PatternMatching implements Exp {
 
-    private not: boolean;
-    private _subExp: SubExp;
-    private _escape?: SubExp;
+    private _not: boolean;
+    private _exp: Exp;
+    private _escape?: Exp;
     public readonly name: "PatternMatching"
 
-    constructor(subExp: SubExp, not: boolean = false, escape?: SubExp) {
-        this._subExp = subExp;
-        this.not = not;
+    constructor(exp: Exp, not: boolean = false, escape?: Exp) {
+        this._exp = exp;
+        this._not = not;
         this._escape = escape;
-        if (!(this._subExp instanceof Like) && !!this._escape) {
+        if (!(this._exp instanceof Like) && !!this._escape) {
             throw new Error('Escape is only allowed for LIKE');
         }
     }
 
-
-    get subExp(): SubExp {
-        return this._subExp;
+    get exp(): Exp {
+        return this._exp;
     }
 
-    toSql(): string {
-        let result = `${this.not ? 'NOT ' : ''}${this._subExp.toSql()}`;
-        if (this._escape) {
-            result += ` ESCAPE ${this._escape.toSql()}`;
-        }
-        return result;
+    get escape(): Exp {
+        return this._escape;
     }
 
-    get regex(): RegExp {
-        return undefined;
+    isNot(): boolean {
+        return this._not === true;
     }
+
 }
 
 export class NullExp implements Exp {
@@ -307,8 +263,12 @@ export class NullExp implements Exp {
         this._state = state;
     }
 
-    get regex(): RegExp {
-        return undefined;
+    get exp(): Exp {
+        return this._exp;
+    }
+
+    get operator(): "ISNULL" | "NOTNULL" | "NOT NULL" {
+        return this._state;
     }
 }
 

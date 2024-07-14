@@ -5,7 +5,7 @@ import {
     Column,
     ExpressionList,
     FunctionCall,
-    LiteralValue,
+    LiteralValue, NullExp,
     UnaryOperation
 } from "./exp";
 import {Token, TokenArray} from "../../token";
@@ -244,6 +244,36 @@ describe('Exp', () => {
             expect((expResult.exp as Collate).collation).toBe('NOCASE');
             expect((expResult.exp as Collate).exp).toBeInstanceOf(Column);
         });
+
+    });
+
+    describe('NullExp', () => {
+
+        it('should handle ISNULL', () => {
+            const token = TokenArray.fromString("123 ISNULL").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(NullExp);
+            expect((expResult.exp as NullExp).exp).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as NullExp).operator).toBe('ISNULL');
+        });
+
+        it('should handle NOTNULL', () => {
+            const token = TokenArray.fromString("123 NOTNULL").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(NullExp);
+            expect((expResult.exp as NullExp).exp).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as NullExp).operator).toBe('NOTNULL');
+        });
+
+        it('should handle NOT NULL', () => {
+            const token = TokenArray.fromString("123 NOT NULL").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(NullExp);
+            expect((expResult.exp as NullExp).exp).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as NullExp).operator).toBe('NOT NULL');
+        });
+
+
 
     });
 });
