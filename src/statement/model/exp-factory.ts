@@ -51,7 +51,6 @@ export class ExpResult {
         return new ExpResult(token);
     }
 
-
 }
 
 export class ExpFactory {
