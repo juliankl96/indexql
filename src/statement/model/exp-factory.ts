@@ -18,6 +18,7 @@ import {
     Exp,
     ExpressionList,
     FunctionCall,
+    IsExp,
     LiteralValue,
     NullExp,
     PatternMatching,
@@ -361,6 +362,34 @@ export class ExpFactory {
 
     }
 
+    protected static handleIsExp(token: Token, exp: Exp) {
+        let index: Token = token;
+        let not: boolean = false;
+        let distinctFrom: boolean = false;
+        if (index.value.toUpperCase() !== 'IS') {
+            return ExpResult.noResult(token);
+        }
+        index = index.next;
+        if (index.value.toUpperCase() === 'NOT') {
+            not = true;
+            index = index.next;
+        }
+        if (index.value.toUpperCase() === 'DISTINCT') {
+            index = index.next;
+            if (index.value.toUpperCase() !== 'FROM') {
+                return ExpResult.noResult(token);
+            }
+            distinctFrom = true;
+            index = index.next;
+        }
+        const fromExpResult = ExpFactory.transformExp(index);
+        if (!fromExpResult.exp) {
+            throw new SqliteError(SQLITE_ERROR, `near "${index.value}": syntax error`);
+        }
+        return new ExpResult(fromExpResult.token, new IsExp(fromExpResult.exp, fromExpResult.exp, not, distinctFrom));
+
+    }
+
 
     public static handleNull(token: Token, exp: Exp): ExpResult {
         if (token.value.toUpperCase() == 'ISNULL') {
@@ -406,6 +435,11 @@ export class ExpFactory {
         const nullExp = this.handleNull(leftResult.token, leftResult.exp);
         if (nullExp.exp) {
             return nullExp;
+        }
+
+        const isExp = this.handleIsExp(leftResult.token, leftResult.exp);
+        if (isExp.exp) {
+            return isExp;
         }
 
         return leftResult;

@@ -272,23 +272,36 @@ export class NullExp implements Exp {
     }
 }
 
-export class Distinct implements Exp {
+export class IsExp implements Exp {
 
     private _not: boolean;
     private _distinctFrom: boolean;
-    private _exp: Exp;
-    private _from: Exp;
-    public readonly name: "Distinct"
+    private _left: Exp;
+    private _right: Exp;
+    public readonly name: "IsExp"
 
-    constructor(exp: Exp, from: Exp, not: boolean = false, distinctFrom: boolean = false) {
-        this._exp = exp;
-        this._from = from;
+    constructor(left: Exp, right: Exp, not: boolean = false, distinctFrom: boolean = false) {
+        this._left = left;
+        this._right = right;
         this._not = not;
         this._distinctFrom = distinctFrom;
     }
 
-    get regex(): RegExp {
-        return undefined;
+    public isNot(): boolean {
+        return this._not === true;
+
+    }
+
+    public isDistinctFrom(): boolean {
+        return this._distinctFrom === true;
+    }
+
+    public get left(): Exp {
+        return this._left;
+    }
+
+    public get right(): Exp {
+        return this._right;
     }
 }
 

@@ -5,7 +5,9 @@ import {
     Column,
     ExpressionList,
     FunctionCall,
-    LiteralValue, NullExp,
+    IsExp,
+    LiteralValue,
+    NullExp,
     UnaryOperation
 } from "./exp";
 import {Token, TokenArray} from "../../token";
@@ -273,7 +275,39 @@ describe('Exp', () => {
             expect((expResult.exp as NullExp).operator).toBe('NOT NULL');
         });
 
-
-
     });
+
+    describe('IsExp', () => {
+
+        it('should handle IS NOT', () => {
+            const token = TokenArray.fromString("1 IS NOT '2'").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(IsExp);
+            expect((expResult.exp as IsExp).left).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as IsExp).right).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as IsExp).isNot()).toBe(true);
+            expect((expResult.exp as IsExp).isDistinctFrom()).toBe(false);
+        });
+
+        it('should handle IS NOT DISTINCT FROM', () => {
+            const token = TokenArray.fromString("1 IS NOT DISTINCT FROM '2'").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(IsExp);
+            expect((expResult.exp as IsExp).left).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as IsExp).right).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as IsExp).isNot()).toBe(true);
+            expect((expResult.exp as IsExp).isDistinctFrom()).toBe(true);
+        });
+
+        it('should handle IS', () => {
+            const token = TokenArray.fromString("1 IS '2'").getFirstToken();
+            const expResult = ExpFactory.transformExp(token);
+            expect(expResult.exp).toBeInstanceOf(IsExp);
+            expect((expResult.exp as IsExp).left).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as IsExp).right).toBeInstanceOf(LiteralValue);
+            expect((expResult.exp as IsExp).isNot()).toBe(false);
+            expect((expResult.exp as IsExp).isDistinctFrom()).toBe(false);
+        });
+
+    })
 });
