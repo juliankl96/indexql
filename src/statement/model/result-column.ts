@@ -75,6 +75,9 @@ export class ResultColumn {
 export class ResultColumnFactory {
 
     protected static handleAlias(token: Token, exp: Exp): ResultColumnResult {
+        if (token === undefined) {
+            return ResultColumnResult.noResult(token);
+        }
         if (token.value.toUpperCase() === 'AS') {
             token = token.next;
             const alias = ResultColumn.createViaExp(exp, token.value);
@@ -110,8 +113,14 @@ export class ResultColumnFactory {
             }
         }
 
+
         if (expResult.exp) {
-            return ResultColumnFactory.handleAlias(expResult.token, expResult.exp);
+
+            const alias = ResultColumnFactory.handleAlias(expResult.token, expResult.exp);
+            if (alias.result) {
+                return alias;
+            }
+            return new ResultColumnResult(expResult.token, ResultColumn.createViaExp(expResult.exp));
         }
         if (token.value === '*') {
             return new ResultColumnResult(token.next, ResultColumn.createViaStar());
