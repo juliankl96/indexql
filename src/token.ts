@@ -1,4 +1,5 @@
 import {Type} from "./statement/statement";
+import {SQLITE_ERROR, SqliteError} from "./error/sqlite-error";
 
 
 export class Token {
@@ -102,7 +103,7 @@ export class TokenArray {
             replacedSql = replacedSql.replace(token.value, '');
         }
         if (replacedSql.trim().length > 0) {
-            throw new Error('Tokenization failed: ' + replacedSql);
+            throw new SqliteError(SQLITE_ERROR, 'unrecognized token: \"' + replacedSql.trim() + '\"');
         }
     }
 
