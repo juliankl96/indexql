@@ -1,6 +1,7 @@
-import {Exp} from "./exp";
+import {Column, Exp} from "./exp";
 import {Token} from "../../token";
 import {ExpFactory} from "./exp-factory";
+import {SQLITE_ERROR, SqliteError} from "../../error/sqlite-error";
 
 export class ResultColumnResult {
 
@@ -14,6 +15,14 @@ export class ResultColumnResult {
 
     static noResult(token: Token) {
         return new ResultColumnResult(token);
+    }
+
+    get result(): ResultColumn {
+        return this._result;
+    }
+
+    get token(): Token {
+        return this._token;
     }
 }
 
@@ -41,6 +50,14 @@ export class ResultColumn {
         this._star = star;
     }
 
+    get star(): boolean {
+        return this._star;
+    }
+
+    get tableName(): string | undefined {
+        return this._tableName;
+    }
+
     get exp(): Exp {
         return this._exp;
     }
@@ -65,14 +82,42 @@ export class ResultColumnFactory {
         }
 
         return new ResultColumnResult(token, ResultColumn.createViaExp(exp));
-
     }
+
+    protected static handleStarWithTable(token: Token, column: Column): ResultColumnResult {
+        if (token.next?.value !== '.') {
+            return ResultColumnResult.noResult(token);
+        }
+        let index = token.next.next;
+        if (index.value !== '*') {
+            return ResultColumnResult.noResult(token);
+        }
+        if (column.table || column.schema) {
+            throw new SqliteError(SQLITE_ERROR, 'near "*": syntax error')            ;
+        }
+        index = index.next;
+        const resultColumn = ResultColumn.createViaStar(column.column);
+        return new ResultColumnResult(index, resultColumn)
+    }
+
 
     public static createResultColumn(token: Token): ResultColumnResult {
         const expResult = ExpFactory.transformExp(token);
+        if (expResult.exp instanceof Column) {
+            const columnWithTable = ResultColumnFactory.handleStarWithTable(token, expResult.exp as Column);
+            if (columnWithTable.result) {
+                return columnWithTable;
+            }
+        }
+
         if (expResult.exp) {
             return ResultColumnFactory.handleAlias(expResult.token, expResult.exp);
         }
+        if (token.value === '*') {
+            return new ResultColumnResult(token.next, ResultColumn.createViaStar());
+        }
+
+
         return ResultColumnResult.noResult(token);
     }
 
