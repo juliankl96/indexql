@@ -1,5 +1,6 @@
 import {Statement} from "./statement";
 import {Token} from "../token";
+import {ResultColumn, ResultColumnFactory} from "./model/result-column";
 
 export class StatementFactory {
 
@@ -22,7 +23,21 @@ export class StatementFactory {
             all = true;
             index = index.next;
         }
-        let columns: Token[] = [];
+        const resultColumns: ResultColumn[] = []
+        while (true) {
+            const resultColumnResult = ResultColumnFactory.createResultColumn(index);
+            if (resultColumnResult.result == undefined) {
+                break;
+            }
+            index = resultColumnResult.token?.next
+            resultColumns.push(resultColumnResult.result)
+            if (index.value !== ',') {
+                break
+            } else {
+                index = index.next
+            }
+        }
+        
 
 
     }
