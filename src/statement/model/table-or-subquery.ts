@@ -1,3 +1,6 @@
+import {FunctionCall} from "./exp";
+import {SelectStatement} from "../select-statement";
+
 export interface TableOrSubquery {
 
 }
@@ -36,6 +39,26 @@ export class TableName implements TableOrSubquery {
     private isNotIndexSet() {
         return this._notIndexSet;
     }
+}
 
+export class FunctionQuery extends FunctionCall implements TableOrSubquery {
 
+}
+
+export class SelectQuery implements TableOrSubquery {
+    private _selectStatement: SelectStatement;
+    private _alias: string;
+
+    constructor(selectStatement: SelectStatement, alias?: string) {
+        this._selectStatement = selectStatement;
+        this._alias = alias;
+    }
+
+    public get selectStatement():SelectStatement{
+        return this._selectStatement;
+    }
+
+    public get alias(){
+        return this._alias;
+    }
 }
