@@ -21,6 +21,10 @@ export class CommaOperator implements JoinOperator{
 
 }
 
+export class EmptyJoin implements  JoinOperator{
+
+}
+
 export class InnerJoinOperator implements JoinOperator{
     private _natural: boolean;
 
@@ -32,11 +36,8 @@ export class InnerJoinOperator implements JoinOperator{
 
 
 export class CrossJoinOperator implements JoinOperator{
-    private _natural: boolean;
 
-    constructor(natural: boolean) {
-        this._natural = natural;
-    }
+
 
 }
 
