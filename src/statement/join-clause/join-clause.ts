@@ -1,4 +1,5 @@
 import {TableOrSubquery} from "../model/table-or-subquery";
+import {Exp} from "../model/exp";
 
 export class JoinClause {
     private _tableOrSubQuery: TableOrSubquery;
@@ -11,8 +12,36 @@ export class JoinClause {
         return this._tableOrSubQuery;
     }
 }
+/*** ----------------- Join Constrain ----------------- ***/
+export interface JoinConstrain {
+}
 
+export class OnConstrain implements JoinConstrain {
+    private _exp: Exp;
 
+    constructor(exp: Exp) {
+        this._exp = exp;
+    }
+
+    public get exp(): Exp {
+        return this._exp;
+    }
+
+}
+
+export class UsingConstrain implements JoinConstrain {
+    private _columnNames: string[];
+
+    constructor(columnNames: string[]) {
+        this._columnNames = columnNames;
+    }
+
+    public get columnNames(): string[] {
+        return this._columnNames;
+    }
+
+}
+/*** ----------------- Join Operator ----------------- ***/
 export interface JoinOperator {
 
 }

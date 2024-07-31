@@ -3,13 +3,14 @@ import {
     CommaOperator,
     CrossJoinOperator,
     EmptyJoin,
-    FullJoinOperator, InnerJoinOperator,
+    FullJoinOperator, InnerJoinOperator, JoinConstrain,
     JoinOperator,
-    LeftJoinOperator,
-    RightJoinOperator
+    LeftJoinOperator, OnConstrain,
+    RightJoinOperator, UsingConstrain
 } from "./join-clause";
 import {Token} from "../../token";
 import {SQLITE_ERROR, SqliteError} from "../../error/sqlite-error";
+import {ExpFactory} from "../model/exp-factory";
 
 
 export class JoinClauseFactory {
@@ -17,6 +18,58 @@ export class JoinClauseFactory {
 
 }
 
+
+export class JoinConstrainFactory {
+
+
+    public static handleToken(token: Token): TokenResult<JoinConstrain> {
+        const onResult = JoinConstrainFactory.handleOn(token);
+        if (onResult.hasResult()) {
+            return onResult;
+        }
+        return JoinConstrainFactory.handleUsing(token);
+
+    }
+
+    private static handleOn(token: Token) {
+        let index = token;
+        if (index.value.toUpperCase() !== "ON") {
+            return TokenResult.empty(token);
+        }
+        index = index.next;
+        const expResult = ExpFactory.transformExp(index);
+        if (expResult.exp) {
+            return new TokenResult<JoinConstrain>(new OnConstrain(expResult.exp), expResult.token);
+        }
+
+        return TokenResult.empty(token);
+    }
+
+    private static handleUsing(token: Token) {
+        if (token.value.toUpperCase() !== "USING") {
+            return TokenResult.empty(token);
+        }
+        let index = token.next;
+        if (index.value !== '(') {
+            throw new SqliteError(SQLITE_ERROR, "Expected ( but found " + index.value)
+        }
+        index = index.next;
+        const columns: string[] = []
+        while (index && index.value !== ')') {
+            columns.push(index.value)
+            index = index.next
+            if (index && index.value === ',') {
+                index = index.next;
+            } else {
+                throw new SqliteError(SQLITE_ERROR, "Expected , but found " + index.value)
+            }
+        }
+        if (!index) {
+            throw new SqliteError(SQLITE_ERROR, "Expected ) but found end of token")
+        }
+        return new TokenResult<JoinConstrain>(new UsingConstrain(columns), index.next);
+    }
+}
 
 export class JoinOperatorFactory {
 
