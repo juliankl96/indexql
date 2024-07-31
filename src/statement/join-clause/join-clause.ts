@@ -50,7 +50,6 @@ export class InnerJoinOperator implements JoinOperator {
 
 export class CrossJoinOperator implements JoinOperator {
 
-
 }
 
 export class LeftJoinOperator implements JoinOperator {

@@ -1,9 +1,16 @@
 import {TokenArray} from "../../token";
 import {JoinOperatorFactory} from "./join-clause-factory";
-import {CommaOperator, EmptyJoin, FullJoinOperator, LeftJoinOperator, RightJoinOperator} from "./join-clause";
+import {
+    CommaOperator,
+    CrossJoinOperator,
+    EmptyJoin,
+    FullJoinOperator,
+    LeftJoinOperator,
+    RightJoinOperator
+} from "./join-clause";
+import {SqliteError} from "../../error/sqlite-error";
 
 describe("join-clause-factory.ts", () => {
-
 
 
     describe("JoinOperationFactory", () => {
@@ -15,6 +22,23 @@ describe("join-clause-factory.ts", () => {
             expect(result.hasResult()).toBeTruthy();
             expect(result.result).toBeInstanceOf(CommaOperator)
         });
+
+        describe("Cross Join Operator", () => {
+            it('should handle cross join', () => {
+                const token = TokenArray.fromString("CROSS JOIN").getFirstToken();
+                const result = JoinOperatorFactory.handleToken(token);
+                expect(result.hasResult()).toBeTruthy();
+                expect(result.result).toBeInstanceOf(CrossJoinOperator)
+
+            });
+
+
+            it('should handle invalid cross join', () => {
+                const token = TokenArray.fromString("CROSS Joi").getFirstToken();
+                expect(() => JoinOperatorFactory.handleToken(token)).toThrow("SQLITE_ERROR: sqlite3 result code 1:Unknown token: Joi")
+            });
+        });
+
 
         describe("should handle outer join", () => {
             it('should handle natural left outer join', () => {
@@ -61,6 +85,7 @@ describe("join-clause-factory.ts", () => {
                 expect(emptyJoin.natural).toBeTruthy();
             });
         })
+
 
     })
 });
