@@ -126,21 +126,21 @@ export class BinaryOperation implements Exp {
 
 export class FunctionCall implements Exp {
 
-    private readonly _name: string;
+    private readonly _functionName: string;
     private readonly _arguments: string[];
     private readonly _filterClause?: FilterClaus;
     private readonly _overClause?: OverClause;
     public readonly name: "FunctionCall"
 
     constructor(name: string, args: string[], filterClause?: FilterClaus, overClause?: OverClause) {
-        this._name = name;
+        this._functionName = name;
         this._arguments = args;
         this._filterClause = filterClause;
         this._overClause = overClause;
     }
 
     get functionName(): string {
-        return this._name;
+        return this._functionName;
     }
 
     get arguments(): string[] {

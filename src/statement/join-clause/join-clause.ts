@@ -1,4 +1,4 @@
-import {TableOrSubquery} from "../model/table-or-subquery";
+import {TableOrSubquery} from "../table-or-subquery/table-or-subquery";
 import {Exp} from "../model/exp";
 
 export class JoinClause {
