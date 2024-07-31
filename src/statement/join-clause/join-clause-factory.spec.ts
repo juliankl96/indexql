@@ -1,6 +1,6 @@
 import {TokenArray} from "../../token";
 import {JoinOperatorFactory} from "./join-clause-factory";
-import {CommaOperator} from "./join-clause";
+import {CommaOperator, EmptyJoin, FullJoinOperator, LeftJoinOperator, RightJoinOperator} from "./join-clause";
 
 describe("join-clause-factory.ts", () => {
 
@@ -22,6 +22,43 @@ describe("join-clause-factory.ts", () => {
                 const tokenResult = JoinOperatorFactory.handleToken(token);
                 expect(tokenResult.hasResult()).toBeTruthy();
                 expect(tokenResult.result).not.toBeUndefined();
+                expect(tokenResult.result).toBeInstanceOf(LeftJoinOperator)
+                const leftJoinOperator: LeftJoinOperator = tokenResult.result as LeftJoinOperator;
+                expect(leftJoinOperator.natural).toBeTruthy();
+                expect(leftJoinOperator.outer).toBeTruthy();
+
+            });
+
+            it('should handle natural right outer join', () => {
+                const token = TokenArray.fromString("NATURAL RIGHT OUTER JOIN").getFirstToken();
+                const tokenResult = JoinOperatorFactory.handleToken(token);
+                expect(tokenResult.hasResult()).toBeTruthy();
+                expect(tokenResult.result).not.toBeUndefined();
+                expect(tokenResult.result).toBeInstanceOf(RightJoinOperator)
+                const rightJoinOperator: RightJoinOperator = tokenResult.result as RightJoinOperator;
+                expect(rightJoinOperator.natural).toBeTruthy();
+                expect(rightJoinOperator.outer).toBeTruthy();
+            });
+
+            it('should handle natural full outer join', () => {
+                const token = TokenArray.fromString("NATURAL FULL OUTER JOIN").getFirstToken();
+                const tokenResult = JoinOperatorFactory.handleToken(token);
+                expect(tokenResult.hasResult()).toBeTruthy();
+                expect(tokenResult.result).not.toBeUndefined();
+                expect(tokenResult.result).toBeInstanceOf(FullJoinOperator)
+                const fullJoinOperator: FullJoinOperator = tokenResult.result as FullJoinOperator;
+                expect(fullJoinOperator.natural).toBeTruthy();
+                expect(fullJoinOperator.outer).toBeTruthy();
+            })
+
+            it('should handle natural empty join', () => {
+                const token = TokenArray.fromString("NATURAL JOIN").getFirstToken();
+                const tokenResult = JoinOperatorFactory.handleToken(token);
+                expect(tokenResult.hasResult()).toBeTruthy();
+                expect(tokenResult.result).not.toBeUndefined();
+                expect(tokenResult.result).toBeInstanceOf(EmptyJoin)
+                const emptyJoin: EmptyJoin = tokenResult.result as EmptyJoin;
+                expect(emptyJoin.natural).toBeTruthy();
             });
         })
 

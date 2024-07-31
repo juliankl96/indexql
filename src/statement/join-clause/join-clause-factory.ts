@@ -1,5 +1,6 @@
 import {TokenResult} from "../util/TokenResult";
 import {
+    CommaOperator,
     CrossJoinOperator,
     EmptyJoin,
     FullJoinOperator, InnerJoinOperator,
@@ -43,6 +44,11 @@ export class JoinOperatorFactory {
 
     public static handleToken(token: Token): TokenResult<JoinOperator> {
 
+        const commaResult = this.handleComma(token);
+        if (commaResult.hasResult()) {
+            return commaResult;
+        }
+
         const crossResult = this.handleCross(token);
         if (crossResult.hasResult()) {
             return crossResult;
@@ -58,7 +64,7 @@ export class JoinOperatorFactory {
         switch (index.value.toUpperCase()) {
             case 'JOIN':
                 //Nothing
-                return TokenResult.of(new EmptyJoin(), index.next)
+                return TokenResult.of(new EmptyJoin(natural), index.next)
             case  'LEFT':
                 index = index.next
                 if (outer) {
@@ -92,6 +98,13 @@ export class JoinOperatorFactory {
         }
 
 
+        return TokenResult.empty(token);
+    }
+
+    private static handleComma(token: Token) {
+        if (token.value === ',') {
+            return TokenResult.of(new CommaOperator(), token.next)
+        }
         return TokenResult.empty(token);
     }
 }
