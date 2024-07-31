@@ -42,7 +42,7 @@ export class Token {
         for (let i = 0; i < number; i++) {
             index = index.next;
             if (index === undefined) {
-                throw new Error('Jumped out of bounds');
+                return undefined;
             }
         }
         return index;
