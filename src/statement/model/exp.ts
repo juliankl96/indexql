@@ -3,7 +3,6 @@ import {BitwiseOperation} from "./bitwise-operation";
 import {FilterClaus} from "../clause/filter-clause";
 import {OverClause} from "../clause/over-clause";
 import {Like} from "./sub-exp";
-import {TableFunction} from "./table-function";
 import {RaiseFunctionType} from "./raise-function";
 import {DataType} from "./data-types";
 import {SelectStatement} from "../select-statement";
