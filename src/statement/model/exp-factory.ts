@@ -30,6 +30,7 @@ import {UnaryOperator} from "./unnary-operation";
 import {BITWISE_OPERATIONS} from "./bitwise-operation";
 import {FilterClaus} from "../clause/filter-clause";
 import {OverClause} from "../clause/over-clause";
+import {TokenResult} from "../util/TokenResult";
 
 /**
  * Result of a expression.
@@ -445,4 +446,11 @@ export class ExpFactory {
     }
 
 
+    public static handleToken(token: Token): TokenResult<Exp> {
+        const expTokenResult = this.transformExp(token);
+        if (expTokenResult.exp) {
+            return TokenResult.of(expTokenResult.exp, expTokenResult.token)
+        }
+        return TokenResult.empty(token);
+    }
 }
