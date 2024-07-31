@@ -26,9 +26,7 @@ export class TableOrSubqueryFactory {
             indexName = index.value;
             index = index.next;
         } else if (index &&  index.test('NOT', 'INDEXED')) {
-            index = index.jump(2);
-            indexName = index.value;
-            index = index.next;
+            index = index.jump(3);
             notIndexSet = true;
         } else {
             index = index?.next;

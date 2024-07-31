@@ -1,4 +1,4 @@
-import {Exp, FunctionCall} from "../model/exp";
+import {Exp} from "../model/exp";
 import {SelectStatement} from "../select-statement";
 import {JoinClause} from "../join-clause/join-clause";
 
@@ -40,7 +40,7 @@ export class TableName implements TableOrSubquery {
         return this._indexName;
     }
 
-    private isNotIndexSet() {
+    public isNotIndexSet() {
         return this._notIndexSet;
     }
 }
