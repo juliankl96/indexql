@@ -1,17 +1,54 @@
 import {TokenArray} from "../../token";
-import {JoinOperatorFactory} from "./join-clause-factory";
+import {JoinConstrainFactory, JoinOperatorFactory} from "./join-clause-factory";
 import {
     CommaOperator,
     CrossJoinOperator,
     EmptyJoin,
     FullJoinOperator,
-    LeftJoinOperator,
-    RightJoinOperator
+    LeftJoinOperator, OnConstrain,
+    RightJoinOperator, UsingConstrain
 } from "./join-clause";
 import {SqliteError} from "../../error/sqlite-error";
+import {LiteralValue} from "../model/exp";
+import {StringType} from "../model/data-types";
 
 describe("join-clause-factory.ts", () => {
 
+
+    describe("JoinConstrainFactory", () => {
+
+        it('should handle OnConstrain', () => {
+            const token = TokenArray.fromString("ON 'Test 123'").getFirstToken();
+            const result = JoinConstrainFactory.handleToken(token);
+            expect(result.hasResult()).toBeTruthy();
+            expect(result.result).not.toBeUndefined();
+            expect(result.result).toBeInstanceOf(OnConstrain)
+            const onConstrain: OnConstrain = result.result as OnConstrain;
+            expect(onConstrain.exp).not.toBeUndefined();
+            expect(onConstrain.exp).toBeInstanceOf(LiteralValue)
+            const literalValue: LiteralValue = onConstrain.exp as LiteralValue;
+            expect(literalValue.type).toBeInstanceOf(StringType)
+            const stringType: StringType = literalValue.type as StringType;
+            expect(stringType.value).toBe("Test 123");
+        });
+
+         it('should handle UsingConstrain', () => {
+            const token = TokenArray.fromString("USING (column1, column2)").getFirstToken();
+            const result = JoinConstrainFactory.handleToken(token);
+            expect(result.hasResult()).toBeTruthy();
+            expect(result.result).not.toBeUndefined();
+            expect(result.result).toBeInstanceOf(UsingConstrain)
+            const usingConstrain: UsingConstrain = result.result as UsingConstrain;
+            expect(usingConstrain.columnNames).not.toBeUndefined();
+            expect(usingConstrain.columnNames).toHaveLength(2);
+            expect(usingConstrain.columnNames).toContain("column1");
+            expect(usingConstrain.columnNames).toContain("column2");
+        });
+
+
+
+
+    })
 
     describe("JoinOperationFactory", () => {
 

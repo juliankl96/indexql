@@ -55,13 +55,16 @@ export class JoinConstrainFactory {
         }
         index = index.next;
         const columns: string[] = []
-        while (index && index.value !== ')') {
+        while (index) {
             columns.push(index.value)
             index = index.next
-            if (index && index.value === ',') {
-                index = index.next;
-            } else {
+            if (index.value === ')') {
+                break;
+            }
+            if (index.value !== ',') {
                 throw new SqliteError(SQLITE_ERROR, "Expected , but found " + index.value)
+            }else{
+                index = index.next
             }
         }
         if (!index) {
