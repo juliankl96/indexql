@@ -1,7 +1,7 @@
 import {TokenResult} from "../util/TokenResult";
 import {
     CommaOperator,
-    CrossJoinOperator,
+    CrossJoinOperator, EmptyConstrain,
     EmptyJoin,
     FullJoinOperator, InnerJoinOperator, JoinConstrain,
     JoinOperator,
@@ -27,7 +27,11 @@ export class JoinConstrainFactory {
         if (onResult.hasResult()) {
             return onResult;
         }
-        return JoinConstrainFactory.handleUsing(token);
+        let tokenResult = JoinConstrainFactory.handleUsing(token);
+        if (tokenResult.hasResult()) {
+            return tokenResult;
+        }
+        return TokenResult.of(new EmptyConstrain(), token);
 
     }
 
@@ -63,7 +67,7 @@ export class JoinConstrainFactory {
             }
             if (index.value !== ',') {
                 throw new SqliteError(SQLITE_ERROR, "Expected , but found " + index.value)
-            }else{
+            } else {
                 index = index.next
             }
         }

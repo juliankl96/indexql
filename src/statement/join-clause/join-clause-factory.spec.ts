@@ -2,7 +2,7 @@ import {TokenArray} from "../../token";
 import {JoinConstrainFactory, JoinOperatorFactory} from "./join-clause-factory";
 import {
     CommaOperator,
-    CrossJoinOperator,
+    CrossJoinOperator, EmptyConstrain,
     EmptyJoin,
     FullJoinOperator,
     LeftJoinOperator, OnConstrain,
@@ -32,7 +32,14 @@ describe("join-clause-factory.ts", () => {
             expect(stringType.value).toBe("Test 123");
         });
 
-         it('should handle UsingConstrain', () => {
+        it('should handle EmptyConstrain', () => {
+            const token = TokenArray.fromString("token after constrain").getFirstToken()
+            const result = JoinConstrainFactory.handleToken(token);
+            expect(result.hasResult()).toBeTruthy();
+            expect(result.result).toBeInstanceOf(EmptyConstrain)
+        });
+
+        it('should handle UsingConstrain', () => {
             const token = TokenArray.fromString("USING (column1, column2)").getFirstToken();
             const result = JoinConstrainFactory.handleToken(token);
             expect(result.hasResult()).toBeTruthy();
@@ -44,8 +51,6 @@ describe("join-clause-factory.ts", () => {
             expect(usingConstrain.columnNames).toContain("column1");
             expect(usingConstrain.columnNames).toContain("column2");
         });
-
-
 
 
     })

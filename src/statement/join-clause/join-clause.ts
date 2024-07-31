@@ -16,6 +16,10 @@ export class JoinClause {
 export interface JoinConstrain {
 }
 
+export class EmptyConstrain implements JoinConstrain{
+
+}
+
 export class OnConstrain implements JoinConstrain {
     private _exp: Exp;
 

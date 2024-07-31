@@ -330,12 +330,12 @@ export class In implements Exp {
     private _selection: Exp[] | SelectStatement;
     private _not: boolean;
     private _schemaName: string;
-    private _tableName: string | TableFunction;
-    private _tableFunction: TableFunction;
+    private _tableName: string | FunctionCall;
+    private _tableFunction: FunctionCall;
     private _fnList: Exp[];
     public readonly name: "In"
 
-    constructor(exp?: Exp, selection?: Exp[] | SelectStatement, schemaName?: string, tableName?: string, tableFunction?: TableFunction, fnList: Exp[] = [], not: boolean = false) {
+    constructor(exp?: Exp, selection?: Exp[] | SelectStatement, schemaName?: string, tableName?: string, tableFunction?: FunctionCall, fnList: Exp[] = [], not: boolean = false) {
         this._exp = exp;
         this._selection = selection;
         this._not = not;
@@ -399,16 +399,6 @@ export class RaiseFunction implements Exp {
         this._error = error;
     }
 
-    toSql(): string {
-        if (this._raiseFn === RaiseFunctionType.IGNORE) {
-            return `RAISE(${this._raiseFn})`;
-        }
-        return `RAISE(${this._raiseFn}, ${this._error})`;
-    }
-
-    get regex(): RegExp {
-        return undefined;
-    }
 }
 
 
