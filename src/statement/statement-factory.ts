@@ -37,7 +37,7 @@ export class StatementFactory {
                 index = index.next
             }
         }
-        
+        return undefined;
 
 
     }
