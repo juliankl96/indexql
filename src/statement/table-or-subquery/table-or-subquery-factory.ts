@@ -68,7 +68,7 @@ export class TableOrSubqueryFactory {
                 index = expResult.token;
                 expList.push(expResult.result as Exp);
             } else {
-                throw new Error("Expected expression but found " + index.value)
+                throw new Error("Expected value but found " + index.value)
             }
             if (index.value === ')') {
                 break;

@@ -33,7 +33,7 @@ import {OverClause} from "../clause/over-clause";
 import {TokenResult} from "../util/TokenResult";
 
 /**
- * Result of a expression.
+ * Result of a value.
  * If no result is found, the exp is undefined.
  * If a result is found, the exp is defined.
  * If the token is not used, the token is returned.
