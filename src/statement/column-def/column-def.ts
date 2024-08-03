@@ -134,6 +134,9 @@ export class GeneratedConstraint extends ColumnConstraint {
 
 }
 
+/**
+ * https://www.sqlite.org/syntax/column-def.html
+ */
 export class ColumnDef {
 
     private readonly _columnName: string;
