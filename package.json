@@ -17,20 +17,21 @@
     "bridge"
   ],
   "author": "Julian Klämke",
-  "license": "MIT",
+  "license": "GPL-2.0-or-later",
   "bugs": {
     "url": "https://github.com/juliankl96/indexql/issues"
   },
   "homepage": "https://github.com/juliankl96/indexql#readme",
   "dependencies": {
     "@babel/preset-typescript": "^7.24.7",
-    "sql.js": "^1.10.3"
+    "sql-parser-cst": "^0.28.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.5",
     "@babel/preset-env": "^7.24.5",
     "@types/jest": "^29.5.12",
     "babel-jest": "^29.7.0",
+    "fake-indexeddb": "^6.0.0",
     "jest": "^29.7.0"
   }
 }
