@@ -1,14 +1,14 @@
 import {Operation} from "./operation";
 import {ColumnDefinition, CreateTableLikeClause, CreateTableStmt} from "sql-parser-cst/lib/cst/CreateTable";
 import {EntityName, Identifier} from "sql-parser-cst/lib/cst/Expr";
-import {Constraint, TableConstraint} from "sql-parser-cst/lib/cst/Constraint";
+import {Constraint, TableConstraint} from "sql-parser-cst";
 
 export class CreateTableOperation implements Operation {
 
     private readonly _statement: CreateTableStmt;
     private readonly _database: IDBDatabase;
 
-    constructor(database: IDBDatabase, statement: CreateTableStmt, private readonly getWriteDatabase: () => Promise<IDBDatabase>) {
+    constructor(database: IDBDatabase, statement: CreateTableStmt, private readonly getWriteDatabase: (objectStore: string) => Promise<IDBDatabase>) {
         this._database = database;
         this._statement = statement;
     }
@@ -24,7 +24,7 @@ export class CreateTableOperation implements Operation {
     }
 
     private async handleIdentifier(identifier: Identifier) {
-        let database = await this.getWriteDatabase();
+        const database = await this.getWriteDatabase(identifier.name);
         const columns: (ColumnDefinition | TableConstraint | Constraint<TableConstraint> | CreateTableLikeClause)[] = this._statement.columns.expr.items;
 
         let tableName = identifier.name;
@@ -42,6 +42,7 @@ export class CreateTableOperation implements Operation {
             }
 
         }
+
 
 
     }

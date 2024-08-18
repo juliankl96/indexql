@@ -10,9 +10,9 @@ export declare type ConnectionCallback = (err: Error | null) => void;
 export class Connection {
 
     private readonly _databaseName: string;
-
+    private _tables: string[] = [];
     private version: number = 1;
-    private _readDatabase: IDBDatabase;
+    private _database: IDBDatabase;
 
     constructor(databaseName: string, private readonly parseOptions: ParserOptions) {
         this._databaseName = databaseName;
@@ -25,35 +25,33 @@ export class Connection {
             callback(new Error("Error opening database"));
         }
         idbOpenDBRequest.onsuccess = (event) => {
-            this._readDatabase = idbOpenDBRequest.result;
+            this._database = event.target['result'];
+            this._tables = [];
+            for (let i = 0; i < this._database.objectStoreNames.length; i++) {
+                this._tables.push(this._database.objectStoreNames.item(i));
+            }
+
+            this._database.close();
+            this._database = null;
             callback(null);
         }
 
         idbOpenDBRequest.onupgradeneeded = (event) => {
-            this.version = idbOpenDBRequest.result.version;
+            this.version = idbOpenDBRequest.result.version + 1
         }
     }
 
-    private getWriteDatabase(): () => Promise<IDBDatabase> {
-        return () => {
-            let idbOpenDBRequest = indexedDB.open(this._databaseName, this.version++);
-            return new Promise((resolve, reject) => {
-                idbOpenDBRequest.onerror = (_event) => {
-                    reject(new Error("Error opening database"));
-                }
-                idbOpenDBRequest.onupgradeneeded = (_event) => {
-                    resolve(idbOpenDBRequest.result);
-                }
-
-                idbOpenDBRequest.onsuccess = (_event) => {
-                    resolve(idbOpenDBRequest.result);
-                }
-            });
-        };
+    private getWriteDatabase(): (objectStore: string) => Promise<IDBDatabase> {
+        return (objectStore: string) => new Promise((resolve, reject) => {
+            if (this._tables.includes(objectStore)) {
+                resolve(this._database);
+                return;
+            }
+        });
     }
 
     public query(sql: string, callback: Callback) {
-        if (!this._readDatabase) {
+        if (!this._database) {
             callback(new Error("Database not connected"), null);
             return
         }
@@ -64,7 +62,7 @@ export class Connection {
 
             switch (statement.type) {
                 case "create_table_stmt":
-                    operation = new CreateTableOperation(this._readDatabase, statement as CreateTableStmt, this.getWriteDatabase());
+                    operation = new CreateTableOperation(this._database, statement as CreateTableStmt, this.getWriteDatabase());
                     break;
             }
             operation?.execute();
