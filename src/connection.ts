@@ -13,6 +13,7 @@ export class Connection {
     private _tables: string[] = [];
     private version: number = 1;
     private _database: IDBDatabase;
+    private _connected: boolean = false;
 
     constructor(databaseName: string, private readonly parseOptions: ParserOptions) {
         this._databaseName = databaseName;
@@ -20,12 +21,14 @@ export class Connection {
 
 
     public connect(callback: ConnectionCallback) {
+        this.version = 1;
         let idbOpenDBRequest = indexedDB.open(this._databaseName);
         idbOpenDBRequest.onerror = (event) => {
             callback(new Error("Error opening database"));
         }
         idbOpenDBRequest.onsuccess = (event) => {
             this._database = event.target['result'];
+            this._connected = true;
             this._tables = [];
             for (let i = 0; i < this._database.objectStoreNames.length; i++) {
                 this._tables.push(this._database.objectStoreNames.item(i));
@@ -41,31 +44,33 @@ export class Connection {
         }
     }
 
-    private getWriteDatabase(): (objectStore: string) => Promise<IDBDatabase> {
-        return (objectStore: string) => new Promise((resolve, reject) => {
-            if (this._tables.includes(objectStore)) {
-                resolve(this._database);
-                return;
-            }
-        });
+
+    protected handleUpgrade(objectStoreFn: (IDBDatabase) => void):void {
+        const upgradeRequest = indexedDB.open(this._databaseName, this.version);
+        upgradeRequest.onupgradeneeded = (event) => {
+            objectStoreFn(upgradeRequest.result);
+        }
     }
 
     public query(sql: string, callback: Callback) {
-        if (!this._database) {
+        if (!this._connected) {
             callback(new Error("Database not connected"), null);
             return
         }
         let ast = parse(sql, this.parseOptions);
         let statements = ast.statements;
+
         for (const statement of statements) {
             let operation: Operation = null;
 
             switch (statement.type) {
                 case "create_table_stmt":
-                    operation = new CreateTableOperation(this._database, statement as CreateTableStmt, this.getWriteDatabase());
+                    operation = new CreateTableOperation(this._database, statement as CreateTableStmt, this.handleUpgrade);
                     break;
             }
-            operation?.execute();
+            operation?.execute().then(value => {
+                callback(null, value);
+            });
         }
 
     }

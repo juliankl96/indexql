@@ -3,12 +3,14 @@ import {ColumnDefinition, CreateTableLikeClause, CreateTableStmt} from "sql-pars
 import {EntityName, Identifier} from "sql-parser-cst/lib/cst/Expr";
 import {Constraint, TableConstraint} from "sql-parser-cst";
 
+
 export class CreateTableOperation implements Operation {
 
     private readonly _statement: CreateTableStmt;
     private readonly _database: IDBDatabase;
 
-    constructor(database: IDBDatabase, statement: CreateTableStmt, private readonly getWriteDatabase: (objectStore: string) => Promise<IDBDatabase>) {
+    //    protected handleUpgrade (objectStoreFn: (IDBDatabase) => void)
+    constructor(database: IDBDatabase, statement: CreateTableStmt, private readonly handleUpgradeFn: (database: (IDBDatabase) => void) => void) {
         this._database = database;
         this._statement = statement;
     }
@@ -20,29 +22,55 @@ export class CreateTableOperation implements Operation {
             case "identifier":
                 return this.handleIdentifier(entityName as Identifier);
         }
-
     }
 
-    private async handleIdentifier(identifier: Identifier) {
-        const database = await this.getWriteDatabase(identifier.name);
-        const columns: (ColumnDefinition | TableConstraint | Constraint<TableConstraint> | CreateTableLikeClause)[] = this._statement.columns.expr.items;
-
-        let tableName = identifier.name;
-        const objectStore: IDBObjectStore = database.createObjectStore(tableName, {
-            keyPath: "id",
-            autoIncrement: true
-        })
-
-        for (const column of columns) {
-            switch (column.type) {
-                case "column_definition":
-                    let columnDefinition = column as ColumnDefinition;
-
-                    break;
+    private evaluatePrimaryKey(columnDefinitions: ColumnDefinition[]) {
+        for (const columnDefinition of columnDefinitions) {
+            const primary = columnDefinition.constraints.find(value => value.type === "constraint_primary_key");
+            if (primary) {
+                return columnDefinition;
             }
-
         }
+        return null;
+    }
 
+    private async handleIdentifier(identifier: Identifier): Promise<void> {
+
+        return new Promise((resolve, reject) => {
+
+
+            const items: (ColumnDefinition | TableConstraint | Constraint<TableConstraint> | CreateTableLikeClause)[] = this._statement.columns.expr.items;
+
+            const primaryKey = this.evaluatePrimaryKey(items as ColumnDefinition[]);
+            let tableName = identifier.name;
+            let options = {};
+            if (primaryKey) {
+                const autoIncrement = primaryKey.constraints.find(value => value.type === "constraint_auto_increment") !== null;
+                options = {
+                    keyPath: primaryKey.name.name,
+                    autoIncrement: autoIncrement
+                };
+            }
+            this.handleUpgradeFn(database => {
+                const objectStore = database.createObjectStore(tableName, options);
+                for (const column of items) {
+
+                    if (column === primaryKey) {
+                        continue;
+                    }
+
+                    switch (column.type) {
+                        case "column_definition":
+
+                            const columnDefinition = column as ColumnDefinition;
+                            const name = columnDefinition.name.name;
+                            objectStore.createIndex(name, name, {unique: false})
+                            break;
+                    }
+                }
+                resolve();
+            })
+        });
 
 
     }

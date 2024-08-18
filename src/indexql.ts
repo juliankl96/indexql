@@ -8,7 +8,8 @@ export class Indexql {
 
     private _databaseName: string;
     private parseOptions: ParserOptions = {
-        dialect: "sqlite"
+        dialect: "sqlite",
+        includeNewlines: false
     }
 
 
