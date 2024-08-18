@@ -1,3 +1,5 @@
 export interface Operation {
-    execute(): void;
+
+
+    execute(): Promise<void>;
 }
