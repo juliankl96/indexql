@@ -3,16 +3,17 @@ import {ColumnDefinition, CreateTableLikeClause, CreateTableStmt} from "sql-pars
 import {EntityName, Identifier} from "sql-parser-cst/lib/cst/Expr";
 import {Constraint, TableConstraint} from "sql-parser-cst";
 import {ResultSet} from "./result-set";
+import {DatabaseWrapper} from "../database/database-wrapper";
 
 
 export class CreateTableOperation implements Operation {
 
     private readonly _statement: CreateTableStmt;
-    private readonly _database: IDBDatabase;
+    private readonly _databaseWrapper: DatabaseWrapper;
 
     //    protected handleUpgrade (objectStoreFn: (IDBDatabase) => void)
-    constructor(database: IDBDatabase, statement: CreateTableStmt, private readonly handleUpgradeFn: (database: (IDBDatabase) => void) => void) {
-        this._database = database;
+    constructor(databaseWrapper: DatabaseWrapper, statement: CreateTableStmt) {
+        this._databaseWrapper = databaseWrapper;
         this._statement = statement;
     }
 
@@ -41,7 +42,7 @@ export class CreateTableOperation implements Operation {
 
     private async handleIdentifier(identifier: Identifier): Promise<ResultSet> {
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
             const items: (ColumnDefinition | TableConstraint | Constraint<TableConstraint> | CreateTableLikeClause)[] = this._statement.columns.expr.items;
 
@@ -55,28 +56,27 @@ export class CreateTableOperation implements Operation {
                     autoIncrement: autoIncrement
                 };
             }
-            this.handleUpgradeFn(database => {
-                const objectStore = database.createObjectStore(tableName, options);
+            let objectStore = await this._databaseWrapper.createObjectStore(tableName, options);
 
-                for (const column of items) {
 
-                    if (column === primaryKey) {
-                        continue;
-                    }
+            for (const column of items) {
 
-                    switch (column.type) {
-                        case "column_definition":
-                            const columnDefinition = column as ColumnDefinition;
-                            const name = columnDefinition.name.name;
-                            objectStore.createIndex(name, name, {unique: false})
-                            break;
-                    }
+                if (column === primaryKey) {
+                    continue;
                 }
-                objectStore.transaction.oncomplete = () => {
-                    database.close();
-                    resolve(ResultSet.empty());
+
+                switch (column.type) {
+                    case "column_definition":
+                        const columnDefinition = column as ColumnDefinition;
+                        const name = columnDefinition.name.name;
+                        objectStore.createIndex(name, name, {unique: false})
+                        break;
                 }
-            })
+            }
+            this._databaseWrapper.commitObjectStore(objectStore).then(() => {
+                resolve(ResultSet.empty());
+            });
+
         });
 
 

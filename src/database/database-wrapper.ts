@@ -72,8 +72,17 @@ export class DatabaseWrapper {
         return idbDatabase.createObjectStore(objectStoreName, parameters);
     }
 
-    public commitObjectStore(objectStore: IDBObjectStore) {
-        objectStore.transaction.commit();
+    public commitObjectStore(objectStore: IDBObjectStore): Promise<void> {
+        return new Promise((resolve, reject) => {
+            objectStore.transaction.commit();
+            objectStore.transaction.oncomplete = () => {
+                resolve();
+            }
+            objectStore.transaction.onerror = (event) => {
+                reject(event);
+            }
+        })
+
     }
 
     async getTables(): Promise<string[]> {
