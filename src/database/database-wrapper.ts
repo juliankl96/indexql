@@ -1,9 +1,10 @@
 export class DatabaseWrapper {
     private readonly _databaseName: string;
-
+    private _version: number = 1;
 
     constructor(database: string) {
         this._databaseName = database;
+        this._version = 1;
     }
 
     public andOpen(): Promise<DatabaseWrapper> {
@@ -23,8 +24,27 @@ export class DatabaseWrapper {
                 reject(new Error("Error opening database"));
             }
             idbOpenDBRequest.onsuccess = (event) => {
+                this._version = idbOpenDBRequest.result.version;
                 resolve(idbOpenDBRequest.result);
             }
+        });
+    }
+
+    protected async getWritableDatabase(): Promise<IDBDatabase> {
+        return new Promise<IDBDatabase>((resolve, reject) => {
+            let idbOpenDBRequest = indexedDB.open(this._databaseName, this._version + 1);
+            idbOpenDBRequest.onerror = (event) => {
+                reject(new Error("Error opening database"));
+            }
+            idbOpenDBRequest.onsuccess = (event) => {
+                this._version = idbOpenDBRequest.result.version;
+            }
+
+            idbOpenDBRequest.onupgradeneeded = (event) => {
+                resolve(idbOpenDBRequest.result);
+            }
+
+
         });
     }
 
@@ -40,7 +60,18 @@ export class DatabaseWrapper {
     }
 
 
-    public createObjectStore(test: string) {
-        this.getDatabase()
+    public async createObjectStore(test: string, parameters?: IDBObjectStoreParameters): Promise<IDBObjectStore> {
+        const idbDatabase = await this.getWritableDatabase();
+        return idbDatabase.createObjectStore(test, parameters);
+    }
+
+    async getTables():Promise<string[]> {
+        const idbDatabase = await this.getDatabase();
+        let tables = [];
+        for (let i = 0; i < idbDatabase.objectStoreNames.length; i++) {
+            tables.push(idbDatabase.objectStoreNames.item(i));
+        }
+        return tables;
+
     }
 }

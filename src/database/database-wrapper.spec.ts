@@ -1,5 +1,6 @@
 import {DatabaseWrapper} from "./database-wrapper";
 import 'fake-indexeddb/auto';
+
 describe('database-wrapper', () => {
 
     it('should open the database', async () => {
@@ -9,8 +10,13 @@ describe('database-wrapper', () => {
     });
 
     it('should create a table', async () => {
-        const databaseWrapper =await new DatabaseWrapper('test').andOpen();
-        databaseWrapper.createTable('test', {id: 'INTEGER PRIMARY KEY', name: 'TEXT'});
+        const databaseWrapper = await new DatabaseWrapper('test').andOpen();
+        const idbObjectStore = await databaseWrapper.createObjectStore('test');
+        expect(idbObjectStore).not.toBeNull();
+        idbObjectStore.createIndex('test', 'test', {unique: false})
+        idbObjectStore.transaction.commit();
 
+        const tables = await databaseWrapper.getTables();
+        expect(tables).toContain('test');
     });
 });
