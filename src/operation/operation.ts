@@ -1,5 +1,7 @@
+import {ResultSet} from "./result-set";
+
 export interface Operation {
 
 
-    execute(): Promise<void>;
+    execute(): Promise<ResultSet>;
 }

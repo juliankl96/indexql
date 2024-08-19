@@ -45,7 +45,7 @@ export class Connection {
     }
 
 
-    protected handleUpgrade(objectStoreFn: (IDBDatabase) => void):void {
+    protected handleUpgrade(objectStoreFn: (IDBDatabase) => void): void {
         const upgradeRequest = indexedDB.open(this._databaseName, this.version);
         upgradeRequest.onupgradeneeded = (event) => {
             objectStoreFn(upgradeRequest.result);
@@ -70,7 +70,9 @@ export class Connection {
             }
             operation?.execute().then(value => {
                 callback(null, value);
-            });
+            }).catch(error => {
+                callback(error, null);
+            })
         }
 
     }

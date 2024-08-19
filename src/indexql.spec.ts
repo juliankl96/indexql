@@ -1,5 +1,6 @@
 import {indexql} from "./indexql";
 import 'fake-indexeddb/auto';
+import { getBuckets} from "../test/test-util";
 
 
 describe('indexql', () => {
@@ -12,13 +13,14 @@ describe('indexql', () => {
 
         connection.connect((err) => {
             expect(err).toBeNull();
-            connection.query('CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)', (err, result) => {
+            connection.query('CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)', async (err, result) => {
                 expect(err).toBeNull();
-                expect(result).toBeUndefined();
+                expect(result).not.toBeUndefined();
+                let buckets = await getBuckets('test');
+                expect(buckets).toContain('test');
                 cb();
             });
         });
-
 
     });
 });

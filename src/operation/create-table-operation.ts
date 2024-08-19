@@ -2,6 +2,7 @@ import {Operation} from "./operation";
 import {ColumnDefinition, CreateTableLikeClause, CreateTableStmt} from "sql-parser-cst/lib/cst/CreateTable";
 import {EntityName, Identifier} from "sql-parser-cst/lib/cst/Expr";
 import {Constraint, TableConstraint} from "sql-parser-cst";
+import {ResultSet} from "./result-set";
 
 
 export class CreateTableOperation implements Operation {
@@ -15,12 +16,16 @@ export class CreateTableOperation implements Operation {
         this._statement = statement;
     }
 
-    async execute(): Promise<void> {
+    async execute(): Promise<ResultSet> {
         const entityName: EntityName = this._statement.name
 
         switch (entityName.type) {
             case "identifier":
                 return this.handleIdentifier(entityName as Identifier);
+            case "member_expr":
+                throw new Error("Not implemented");
+            case "bigquery_quoted_member_expr":
+                throw new Error("Not implemented");
         }
     }
 
@@ -34,10 +39,9 @@ export class CreateTableOperation implements Operation {
         return null;
     }
 
-    private async handleIdentifier(identifier: Identifier): Promise<void> {
+    private async handleIdentifier(identifier: Identifier): Promise<ResultSet> {
 
         return new Promise((resolve, reject) => {
-
 
             const items: (ColumnDefinition | TableConstraint | Constraint<TableConstraint> | CreateTableLikeClause)[] = this._statement.columns.expr.items;
 
@@ -53,6 +57,7 @@ export class CreateTableOperation implements Operation {
             }
             this.handleUpgradeFn(database => {
                 const objectStore = database.createObjectStore(tableName, options);
+
                 for (const column of items) {
 
                     if (column === primaryKey) {
@@ -61,14 +66,16 @@ export class CreateTableOperation implements Operation {
 
                     switch (column.type) {
                         case "column_definition":
-
                             const columnDefinition = column as ColumnDefinition;
                             const name = columnDefinition.name.name;
                             objectStore.createIndex(name, name, {unique: false})
                             break;
                     }
                 }
-                resolve();
+                objectStore.transaction.oncomplete = () => {
+                    database.close();
+                    resolve(ResultSet.empty());
+                }
             })
         });
 
