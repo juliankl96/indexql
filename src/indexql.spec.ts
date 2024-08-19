@@ -18,6 +18,9 @@ describe('indexql', () => {
                 const databaseWrapper = await DatabaseWrapper.createAndOpen('test');
                 const buckets = await databaseWrapper.getTables();
                 expect(buckets).toContain('test');
+                const columns = await databaseWrapper.getColumns('test');
+                expect(columns).toContain('id');
+                expect(columns).toContain('name');
                 cb();
             });
         });

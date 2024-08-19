@@ -97,6 +97,10 @@ export class DatabaseWrapper {
 
     }
 
+    /**
+     * Returns a list of tables in the database.
+     * Tables are also known as object stores in IndexedDB.
+     */
     async getTables(): Promise<string[]> {
         const idbDatabase = await this.getDatabase();
         let tables = [];
@@ -104,6 +108,26 @@ export class DatabaseWrapper {
             tables.push(idbDatabase.objectStoreNames.item(i));
         }
         return tables;
+    }
 
+    /**
+     * Returns a list of columns in a table.
+     * @param table The name of the table or object store to get the columns for.
+     */
+    public async getColumns(table: string): Promise<string[]> {
+        const idbDatabase = await this.getDatabase();
+        const idbTransaction = idbDatabase.transaction(table);
+        const objectStore = idbTransaction.objectStore(table);
+        const result: string[] = [];
+
+        if (objectStore.keyPath) {
+            result.push(objectStore.keyPath as string);
+        }
+
+        for (let i = 0; i < objectStore.indexNames.length; i++) {
+            result.push(objectStore.indexNames.item(i));
+        }
+        idbTransaction.commit();
+        return result;
     }
 }
