@@ -2,6 +2,18 @@ export class DatabaseWrapper {
     private readonly _databaseName: string;
     private _version: number = 1;
 
+
+    public static createAndOpen(database: string): Promise<DatabaseWrapper> {
+        return new Promise<DatabaseWrapper>((resolve, reject) => {
+            const databaseWrapper = new DatabaseWrapper(database);
+            databaseWrapper.andOpen().then((result) => {
+                resolve(databaseWrapper);
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
     constructor(database: string) {
         this._databaseName = database;
         this._version = 1;
