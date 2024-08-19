@@ -31,21 +31,25 @@ export class DatabaseWrapper {
     }
 
     protected async getWritableDatabase(): Promise<IDBDatabase> {
+        const newVersion = this._version + 1;
         return new Promise<IDBDatabase>((resolve, reject) => {
-            let idbOpenDBRequest = indexedDB.open(this._databaseName, this._version + 1);
+
+            const idbOpenDBRequest = indexedDB.open(this._databaseName, newVersion);
             idbOpenDBRequest.onerror = (event) => {
-                reject(new Error("Error opening database"));
+                reject(event);
             }
-            idbOpenDBRequest.onsuccess = (event) => {
+            idbOpenDBRequest.onsuccess = (_event) => {
                 this._version = idbOpenDBRequest.result.version;
             }
 
-            idbOpenDBRequest.onupgradeneeded = (event) => {
+            idbOpenDBRequest.onupgradeneeded = (_event) => {
+                this._version = idbOpenDBRequest.result.version;
                 resolve(idbOpenDBRequest.result);
             }
 
 
         });
+
     }
 
     public async open(): Promise<boolean> {
@@ -59,13 +63,22 @@ export class DatabaseWrapper {
         });
     }
 
-
-    public async createObjectStore(test: string, parameters?: IDBObjectStoreParameters): Promise<IDBObjectStore> {
+    /**
+     * Create an object store. If the object store already exists, it will be returned.
+     * @param objectStoreName The name of the object store
+     * @param parameters Optional parameters for the object store
+     * Please call commitObjectStore after creating the object store to commit the transaction
+     */
+    public async createObjectStore(objectStoreName: string, parameters?: IDBObjectStoreParameters): Promise<IDBObjectStore> {
         const idbDatabase = await this.getWritableDatabase();
-        return idbDatabase.createObjectStore(test, parameters);
+        return idbDatabase.createObjectStore(objectStoreName, parameters);
     }
 
-    async getTables():Promise<string[]> {
+    public commitObjectStore(objectStore: IDBObjectStore) {
+        objectStore.transaction.commit();
+    }
+
+    async getTables(): Promise<string[]> {
         const idbDatabase = await this.getDatabase();
         let tables = [];
         for (let i = 0; i < idbDatabase.objectStoreNames.length; i++) {
