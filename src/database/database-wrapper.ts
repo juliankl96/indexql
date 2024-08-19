@@ -46,8 +46,6 @@ export class DatabaseWrapper {
                 this._version = idbOpenDBRequest.result.version;
                 resolve(idbOpenDBRequest.result);
             }
-
-
         });
 
     }
