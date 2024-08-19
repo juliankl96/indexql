@@ -130,4 +130,21 @@ export class DatabaseWrapper {
         idbTransaction.commit();
         return result;
     }
+
+    /**
+     * Returns the primary key of a table.
+     * in object stores, the primary key is the keyPath.
+     * @param table
+     */
+    public async getPrimaryKey(table: string): Promise<string> {
+        const idbDatabase = await this.getDatabase();
+        const idbTransaction = idbDatabase.transaction(table);
+        const objectStore = idbTransaction.objectStore(table);
+
+        if (objectStore.keyPath) {
+            return objectStore.keyPath as string;
+        }
+    }
+
+
 }
