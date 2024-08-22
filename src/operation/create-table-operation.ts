@@ -1,6 +1,6 @@
 import {Operation} from "./operation";
 import {ColumnDefinition, CreateTableLikeClause, CreateTableStmt} from "sql-parser-cst/lib/cst/CreateTable";
-import {EntityName, Identifier} from "sql-parser-cst/lib/cst/Expr";
+import {EntityName, Identifier, MemberExpr} from "sql-parser-cst/lib/cst/Expr";
 import {Constraint, TableConstraint} from "sql-parser-cst";
 import {ResultSet} from "./result-set";
 import {DatabaseWrapper} from "../database/database-wrapper";
@@ -24,7 +24,7 @@ export class CreateTableOperation implements Operation {
             case "identifier":
                 return this.handleIdentifier(entityName as Identifier);
             case "member_expr":
-                throw new Error("Not implemented");
+                return this.handleMemberExpr(entityName);
             case "bigquery_quoted_member_expr":
                 throw new Error("Not implemented");
         }
@@ -40,7 +40,7 @@ export class CreateTableOperation implements Operation {
         return null;
     }
 
-    private async handleIdentifier(identifier: Identifier): Promise<ResultSet> {
+    private handleIdentifier(identifier: Identifier): Promise<ResultSet> {
 
         return new Promise(async (resolve, reject) => {
 
@@ -71,6 +71,8 @@ export class CreateTableOperation implements Operation {
                         const name = columnDefinition.name.name;
                         objectStore.createIndex(name, name, {unique: false})
                         break;
+                    case "create_table_like_clause":
+                        throw new Error("Not implemented");
                 }
             }
             this._databaseWrapper.commitObjectStore(objectStore).then(() => {
@@ -80,5 +82,44 @@ export class CreateTableOperation implements Operation {
         });
 
 
+    }
+
+    private handleMemberExpr(memberExpr: MemberExpr): Promise<ResultSet> {
+        const _memberExpr = memberExpr as MemberExpr;
+        return new Promise(async (resolve, reject) => {
+            const items: (ColumnDefinition | TableConstraint | Constraint<TableConstraint> | CreateTableLikeClause)[] = this._statement.columns.expr.items;
+
+            const primaryKey = this.evaluatePrimaryKey(items as ColumnDefinition[]);
+            let tableName = memberExpr.object['name'];
+            let options = {};
+            if (primaryKey) {
+                const autoIncrement = primaryKey.constraints.find(value => value.type === "constraint_auto_increment") !== null;
+                options = {
+                    keyPath: primaryKey.name.name,
+                    autoIncrement: autoIncrement
+                };
+            }
+            const objectStore = await this._databaseWrapper.createObjectStore(tableName, options);
+
+            for (const column of items) {
+
+                if (column === primaryKey) {
+                    continue;
+                }
+
+                switch (column.type) {
+                    case "column_definition":
+                        const columnDefinition = column as ColumnDefinition;
+                        const name = columnDefinition.name.name;
+                        objectStore.createIndex(name, name, {unique: false})
+                        break;
+                    case "create_table_like_clause":
+                        throw new Error("Not implemented");
+                }
+            }
+            this._databaseWrapper.commitObjectStore(objectStore).then(() => {
+                resolve(ResultSet.empty());
+            });
+        });
     }
 }
